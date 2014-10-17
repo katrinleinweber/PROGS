@@ -1,0 +1,12 @@
+
+for dir in $(find . -name ".git" -type d -exec dirname \{\} \;  ); do
+	{ 
+	pushd $dir  > /dev/null
+	echo $dir
+	git remote -v update 
+	# git status 
+	echo ==============
+	popd > /dev/null
+	}
+done
+
