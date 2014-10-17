@@ -3,6 +3,7 @@ for dir in $(find . -name ".git" -type d -exec dirname \{\} \;  ); do
 	{ 
 	pushd $dir  > /dev/null
 	echo $dir
+	# be sure to have an upstream branch set
 	git remote -v update 
 	git status -s 
 	echo ==============
