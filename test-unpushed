@@ -8,6 +8,6 @@ for dir in $(find . -name ".git" -type d -exec dirname \{\} \;  ); do
 	git status -s 
 	echo ==============
 	popd > /dev/null
-	}
+	} 2>&1 
 done
 
