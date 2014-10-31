@@ -1,5 +1,12 @@
+#!/bin/bash
 
-for dir in $(find . -name ".git" -type d -exec dirname \{\} \;  ); do
+if [ $# = 0 ]; then
+	DIR=.
+else
+	DIR=$@
+fi
+
+for dir in $(find $DIR -name ".git" -type d -exec dirname \{\} \;  ); do
 	{ 
 	pushd $dir  > /dev/null
 	echo $dir
@@ -11,4 +18,6 @@ for dir in $(find . -name ".git" -type d -exec dirname \{\} \;  ); do
 	popd > /dev/null
 	} 2>&1 
 done
+
+# vim: se nowrap tw=0 :
 
