@@ -1,0 +1,21 @@
+export TZ=GMT0
+cat -v /ships/humboldt/Ramdisk/Domina.TGM | head -1q |
+	awk -f mathlib.awk --source '
+	BEGIN{FS=","; OFS="\t"}
+	{
+	L1= parsepos("26 38.56 s");
+	L2=parsepos("15 09.32 e");
+	S1=parsepos($8);
+	S2=parsepos($9);
+	# print $15
+	# V=10
+	V=$15;
+	# print L1,L2,S1,S2
+	dD=distance(L1,L2,S1,S2,"nm");
+	print "\n", dD, "Miles to Lüderitz", "\n"
+	T1=mktime("2004 04 16 07 30 00");
+	# T0=mktime("2004 04 15 17 30 00");
+	T0=systime();
+	dT=(T1-T0)/60/60
+	print "\t" dT " hours left;  " dT-dD/V " hours for stations"
+	}'

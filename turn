@@ -1,0 +1,19 @@
+
+FILES=( $* )
+if [ ${#FILES} -eq 0 ]; then 
+	echo Turns graphics files 180 degrees
+	echo Usage: $0 filenames 
+	exit 99
+fi
+
+for FILE in ${FILES[*]} ; do
+	if [ -e $FILE ]; then
+		echo $FILE
+		TMPFILE=`mktemp`
+		mv $FILE $TMPFILE
+		convert -rotate 180 $TMPFILE $FILE && rm $TMPFILE
+	else
+		echo $FILE not found
+	fi 
+done
+

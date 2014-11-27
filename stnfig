@@ -1,0 +1,76 @@
+#!/bin/sh
+
+DataFile=`uniqfile`
+# BlurbFile=`uniqfile`
+S87FILE=${1:?}
+
+s872table1.awk Depth,Temperature,Salinity,Oxygen,Fluorescence $S87FILE > $DataFile
+
+TRange=4/25
+TBorder=f1a5
+Tlabel="Temperature (solid)"
+ORange=0/10
+OBorder=f0.5a2
+Olabel="Oxygen (dot)"
+DRange=0/150
+DBorder=f10a20
+Dlabel="Depth"
+SRange=33.5/36
+SBorder=f0.1a0.5
+Slabel="Salinity (dash)"
+FRange=0/3.5
+FBorder=f0.1a0.5
+Flabel="Fluorescence (dot-dash)"
+
+# SRange=`awk '{print $3,$1}' $DataFile | minmax -I5/10`
+# SBorder=`echo $SRange | awk -f axis.awk `
+
+gmtset	ANOT_FONT_SIZE          = 12p		\
+	BASEMAP_TYPE            = plain		\
+	DEGREE_FORMAT           = 3		\
+	HEADER_FONT_SIZE        = 20p		\
+	PAPER_MEDIA             = a4+		\
+	LABEL_FONT_SIZE         = 14p
+
+
+	
+
+
+awk '{print $4,$1}' $DataFile | psxy -R$ORange/$DRange -JX3i/-6i -Wto -P -K -Y3i -X1.5i
+awk '{print $2,$1}' $DataFile | psxy -R$TRange/$DRange -JX3i/-6i -W -B${TBorder}:"$Tlabel":/${DBorder}S -K -O
+awk '{print $5,$1}' $DataFile | psxy -R$FRange/$DRange -JX3i/-6i -Wt20_10_5_10:10 -K -O
+awk '{print $3,$1}' $DataFile | psxy -R$SRange/$DRange -JX3i/-6i -Wta -B${SBorder}:"$Slabel":/${DBorder}:"$Dlabel":WeN -O -K
+psbasemap -R$ORange/$DRange -JX -B$OBorder:"$Olabel":/N -Y2c -O -K
+psbasemap -R$FRange/$DRange -JX -B$FBorder:"$Flabel":/S -Y-4c -O -K
+
+
+cat $S87FILE | gawk -f mathlib.awk -v file=$S87FILE --source 'NR==1{
+	printf "> 0.5 0.5 12 0 0 TL 16p 8 l\n" ; 
+	printf "Station:\n\n";
+	printf "Grid:\n\n";
+	printf "Filename:\n\n";
+	printf "Latitude:\n\n";
+	printf "Longitude:\n\n";
+	printf "Date:\n\n";
+	printf "Time:\n\n";
+	printf "Depth:\n\n";
+	printf "Altitude:\n\n";
+	printf "> 3.5 0.5 12 0 1 TL 16p 6 l\n" ; 
+	printf "@:14:" $2 "@::\n\n";
+	printf "%s\n\n",$3;
+	printf "%s\n\n",file;
+	h=$4<0?"S":"N";h=$4==0?"":h; $4=abs($4);
+	d=int($4); m=($4-d)*60; printf "%3d\\217%07.4f%c\n\n",d,m,h;
+	h=$4<0?"W":"E";h=$4==0?"":h; $5=abs($5);
+	d=int($5); m=($5-d)*60; printf "%3d\\217%07.4f%c\n\n",d,m,h;
+	printf "%s\n\n",$6;
+	printf "%s\n\n",$8;
+	}
+	NR==2{
+	Z=gensub(/.*ZZ=([0-9.]*).*/,"\\1",1); printf "%.1f\n\n", Z;
+	H=gensub(/.*ZM=([0-9.]*).*/,"\\1",1); printf "%.1f\n\n", H;
+	}
+' | pstext -M -R0/10/0/10 -JX -X3.5i -Y2c -O
+
+rm $DataFile
+

@@ -1,0 +1,9 @@
+# /bin/bash
+
+# 
+xterm -T Matlab -aw -fn 7x14 -rw -e "
+	ps -f -u ${USER} | grep matlab_helper | grep -v grep | grep -v xterm >/dev/null &&
+		echo Another Matlab is already running;
+	matlab -nodesktop -nosplash
+	"
+

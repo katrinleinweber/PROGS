@@ -1,0 +1,9 @@
+#! /bin/sh
+MESSAGE=$*
+
+if [ ! "$MESSAGE" ]; then 
+	MESSAGE="you have something to do. check the korganizer"
+fi
+
+echo "$MESSAGE" | mail -s "something to do" duncombe 
+

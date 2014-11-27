@@ -1,0 +1,50 @@
+
+# I want to compare files with the rcs record of changes. This is to
+# potentially answer the questions: which revision of this script is 
+# this file? 
+
+# Usage: myrcsdiff rcsrepository filename
+
+
+if [ -d CVS ] ; then
+        LOGCOMMAND="cvs log"
+	function rcscheck(){
+		cvs -q upd -p -r $1 $2
+		}
+elif [ -d RCS ] ; then
+        LOGCOMMAND=rlog
+	function rcscheck(){
+		co -q -p$1 $2
+		}
+else
+        echo Cannot determine versioning commands
+        exit 10
+fi
+
+
+RCSREPOS=${1?Provide a file in RCS/CVS to search}
+####################################
+	if [ `$LOGCOMMAND $RCSREPOS 2> /dev/null | wc -l` -eq 0 ]; then
+		echo "Usage: $0 <rcsrepository> <filename>"
+		echo "       <rcsrepository> must be a file in RCS/CVS"
+		exit 1
+	fi
+FILENAME=${2?Provide a filename to compare}
+TMPFILE=`mktemp`
+
+####################################
+REVS=(`rcsrevs $RCSREPOS`)
+
+for rev in ${REVS[@]}; do
+	# display an identifier
+	echo -en Revision:\\t$rev\\t 
+	# fetch out the version
+####################################
+	rcscheck $rev $RCSREPOS > $TMPFILE
+	# compare it
+	diff -n -d -w $FILENAME $TMPFILE | wc -l
+done
+
+# tidy up
+rm $TMPFILE
+

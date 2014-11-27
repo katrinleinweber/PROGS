@@ -1,0 +1,7 @@
+DateFormat="+%t %F %T"
+echo ""
+TZ="EST5EDT" date "$DateFormat Eastern"
+echo ""
+TZ="UTC0" date "$DateFormat Universal"
+echo ""
+TZ="SAST-2" date "$DateFormat South African"

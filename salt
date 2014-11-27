@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export AWKPATH=${AWKPATH:-.:$HOME/PROGS}
+
+gawk -f mathlib.awk -f sealib.awk -f salt.awk $@
+

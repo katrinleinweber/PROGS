@@ -1,0 +1,115 @@
+#!/bin/bash
+# Converts nodc csv formatted data to s87 format files
+# Written 2009/03/14 CMDR
+# 
+awk -f mathlib.awk --source '
+   BEGIN{
+	base_ofn="nodc";
+	cntr=0;
+   	stnr=1;
+	stnnum=0;
+	ofn="";
+	FS=",";
+	RS="\n";
+	DATANOW=0;
+	nostation=1;
+	}
+# station separator
+/^END OF VARIABLES/{
+	DATANOW=0
+	close(ofn)
+	}
+/^\#---/{ stnr=0;
+	if(ofn!=""){close(ofn)};
+	getline;
+	Stn=nostation++;
+Cruise="not known";
+Lat=-99;
+Lon=-99;
+Year=9999;
+Month=99;
+Day=99;
+Time=0;
+Country=99;
+Platform=99;
+Depth=-99;
+	# stnnum++;
+ 	}
+/^CAST/{};
+/^NODC Cruise/{};
+/^Originators Station/{Stn=gensub(" ","","g",$3)
+	if (Stn==""){Stn=nostation}
+	};
+/^Originators Cruise/{Cruise=gensub(" ","","g",$3)
+	if (Cruise==""){Cruise="not known"}
+	};
+/^Latitude/{Lat=gensub(" ","","g",$3)}; 
+/^Longitude/{Lon=gensub(" ","","g",$3)}; 
+/^Year/{Year=gensub(" ","","g",$3)};
+/^Month/{Month=gensub(" ","","g",$3)};
+/^Day/{Day=gensub(" ","","g",$3)};
+/^Time/{Time=gensub(" ","","g",$3)};
+/^Country/{Country=gensub(" ","","g",$3)};
+/^Platform/{Platform=gensub(" ","","g",$3)};
+/^Bottom depth/{Depth=gensub(" ","","g",$3)};
+/^VARIABLES/{ Varcol["Pressure"]=0; Varcol["Conductivi"]=0;
+		Varcol["Salinity"]=0; Varcol["Temperatur"]=0;
+		Varcol["Oxygen"]=0; Varcol["Chlorophyl"]=0;
+		Varcol["Depth"]=0;
+	n=split($0,Varn,",");
+	for (i=1;i<=n;i++){
+		gsub(" ","",Varn[i]);
+		Varcol[Varn[i]]=i;
+	# print i " " Varn[i] " " Varcol[Varn[i]]
+		};
+	getline; # units
+	getline; # marker
+	getline; # marker
+
+	DATANOW=1;
+	# open file
+	ofn=base_ofn "_" sprintf("%09.4f",Lon) "_" sprintf("%08.4f",Lat) \
+		"_" sprintf("%04d%02d%02d",Year,Month,Day) 
+	extn = ".s87";
+	idfr="";
+	while (system("test ! -e " ofn idfr extn)){
+		idfr--
+	}
+	ofn=ofn idfr extn
+	print ofn
+	# print header
+	printf	"C%s%s %s %d %g %g %4d/%02d/%02d %3d %02d:%02d %s\n",\
+		Country, "99", Stn, 1, Lat, Lon, Year, Month, Day, \
+		date2day(Year,Month,Day), int(Time), \
+		int((Time-int(Time))*60), Cruise > ofn
+		print "&" >> ofn
+
+# print n, Varcol["Pressure"]
+	printf "@"  >> ofn
+	print   (Varcol["Pressure"]>0)?"PR":"", \
+		(Varcol["Conductivi"]>0)?"CO":"", \
+		(Varcol["Salinity"]>0)?"SA":"", \
+		(Varcol["Temperatur"]>0)?"TE":"", \
+		(Varcol["Oxygen"]>0)?"OX":"", \
+		(Varcol["Chlorophyl"]>0)?"CH":"", \
+		(Varcol["Depth"]>0)?"DE":""  >> ofn
+	}
+
+DATANOW{
+	# print "doing read data"
+	print	\
+		(Varcol["Pressure"]>0)?$Varcol["Pressure"]:"", \
+		(Varcol["Conductivi"]>0)?$Varcol["Conductivi"]:"", \
+		(Varcol["Salinity"]>0)?$Varcol["Salinity"]:"", \
+		(Varcol["Temperatur"]>0)?$Varcol["Temperatur"]:"", \
+		(Varcol["Oxygen"]>0)?$Varcol["Oxygen"]:"", \
+		(Varcol["Chlorophyl"]>0)?$Varcol["Chlorophyl"]:"", \
+		(Varcol["Depth"]>0)?$Varcol["Depth"]:"" \
+		 >> ofn
+	}
+		
+   END{ close(ofn) }
+
+ ' $@
+
+

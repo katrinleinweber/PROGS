@@ -1,0 +1,28 @@
+#! /bin/zsh
+#
+# changes the case of filenames
+for FILE in *\ *
+	mv -i $FILE $FILE:gs/\ /_/
+for FILE in *\!*
+	mv -i $FILE $FILE:gs/\!/1/
+for FILE in *\&*
+	mv -i $FILE $FILE:gs/\&/_and_/
+for FILE in *\'*
+	mv -i $FILE $FILE:gs/\'/_/
+for FILE in *\`*
+	mv -i $FILE $FILE:gs/\`/_/
+for FILE in *\**
+	mv -i $FILE $FILE:gs/\*/x/
+for FILE in *[A-Z]*
+do
+	if [ ! -d $FILE ]
+	then 
+		mv -i $FILE ${(L)FILE} 
+	else
+		echo $FILE not moved \(directory\)
+	fi
+done
+for FILE in *[^-_\.@a-zA-Z0-9]*
+do
+	echo $FILE is badly named - rename manually
+done

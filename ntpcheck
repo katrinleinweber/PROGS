@@ -1,0 +1,6 @@
+#!/bin/sh
+# Checks the localhost for what it's running regards timeserver (NTP)
+
+ps -ax | grep -v grep | grep -i ntp | grep -v $0
+cat /var/log/messages | grep -i ntp | tail -n1
+[ -e /etc/ntp.conf ] && egrep -v "^#|^$" /etc/ntp.conf

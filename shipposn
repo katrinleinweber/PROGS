@@ -1,0 +1,5 @@
+#! /bin/sh
+
+
+tail -n1 `find /africana/NDS1/ -mmin -2 -iname "*.csv" -print ` |
+	awk 'BEGIN{FS=","}{print strftime("%e %B %Y, %H:%M") " (" $4 "; " $5 ")\n"}'

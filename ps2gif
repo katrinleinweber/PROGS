@@ -1,0 +1,6 @@
+#! /bin/csh
+if ( (-e $1) && ! ( -e $2 ) ) then
+set PD=/usr/progs/conv_utils
+$PD/fromeps $1 /tmp/zot && $PD/togif /tmp/zot $2 && rm /tmp/zot
+endif
+

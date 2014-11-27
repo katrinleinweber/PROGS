@@ -1,0 +1,9 @@
+#! /bin/sh
+#
+# sums the column 
+# usage | add $1
+#
+
+PAR=${1:-\$1}
+gawk "BEGIN{sum=0}{sum+=$PAR}END{print sum}"
+

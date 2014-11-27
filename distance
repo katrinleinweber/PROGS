@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Create a coastline file using an input -R (default SA?)
+# For each value submitted find minimum distance point
+
+
+while [ $# -gt 0 ]; do
+	case $1 in 
+		-R*)	RANGE=$1 ;;
+		-D*)	DEFINI=$1 ;;
+		-)	DATAFILES=$@ ; shift $# ;;
+		[^-]*)	DATAFILES=$@ ; shift $# ;;
+	esac
+	test $# -gt 0 && shift
+done
+
+if [ -z "$DATAFILES" ]; then
+	echo "distance: Calculates distance from coastline of points "
+	echo "          Uses GMT's pscoast to create a temporary file "
+	echo "          of the coastline. Compares distance to each point"
+	echo "          and returns minimum."
+	echo "Usage:    distance -Rrange -Dresolution filenames"
+	echo "          Range is required, resolution is optional."
+	echo "          To read from standard input use -"
+	echo "          Expects data as latitude\tlongitude"
+	echo "          Output is:"
+	echo "          <given lat> <given long> <distance> <coast lat> <coast long>"
+	exit 1
+fi
+if [ -z "$RANGE" ]; then echo "Must specify a RANGE"; exit 2 ; fi
+if [ -z "$DEFINI" ]; then echo "Using default intermediate resolution"; DEFINI="-Di" ; fi
+
+COASTLINE=`uniqfile`
+pscoast $RANGE $DEFINI -W -M -A0/1/1 > $COASTLINE
+
+gawk -v CFILE=$COASTLINE -f mathlib.awk --source '
+	BEGIN{
+	OFS="\t"
+	 i=1
+	 while ( getline < CFILE > 0 ){
+		if (! /^#|^>/){
+			clat[i]=$2;
+			clon[i]=$1; 
+			i++ ; 
+			}
+		}
+	}
+	{sub(//,"");}
+	{
+	 min=10000000;
+	 for ( i in clat ){
+################################		
+	 	dist=distance($1,$2,clat[i],clon[i]); 
+		# print clat[i],clon[i],dist
+	 	if ( dist<min ){min=dist; ind=i};
+	 	}
+################################
+	print $1,$2,min,clat[ind],clon[ind];
+	 }' $DATAFILES
+
+rm $COASTLINE
+

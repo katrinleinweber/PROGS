@@ -1,0 +1,41 @@
+#! /bin/sh
+#
+# Update the essential system configuration information on a stiffy
+#
+function uniqfile()
+{
+BASE=`date +%s`
+FIL=$BASE
+while [ -e $FIL ]
+do
+        FIL=$BASE.$((EXT+=1))
+done
+mkdir $FIL && echo $FIL
+}
+umount `cat /etc/mtab | grep /dev/fd0 | awk '{print $2}'` > /dev/null 2>&1
+
+DiskName=`mlabel -s a: | awk '{print toupper($4)}'`
+HostName=`echo $HOSTNAME | awk '{print toupper($0)}'`
+
+if [ $HostName = $DiskName ]
+then
+	MountPoint=`uniqfile`
+
+	mount -t vfat /dev/fd0 $MountPoint
+
+	tar -cz /etc > $MountPoint/etc.tgz
+	tar -cz /var/spool/cron > $MountPoint/crons.tgz
+	tar -cz /var/X11R6/lib/xinit /var/X11R6/lib/xdm > $MountPoint/x.tgz
+	if [ -e /usr/local/apache/conf ]; then
+		tar -cz /usr/local/apache/conf > $MountPoint/apache_usr.tgz
+	fi
+	if [ -e /var/lib/apache/conf ]; then
+		tar -cz /var/lib/apache/conf > $MountPoint/apache_var.tgz
+	fi
+
+	umount /dev/fd0
+	
+	rmdir $MountPoint || echo "Problem! You may have to remove $MountPoint manually."
+else
+        echo "Wrong DISK! This disk is for host $DiskName. This host is $HostName."
+fi

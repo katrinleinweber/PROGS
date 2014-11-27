@@ -1,0 +1,11 @@
+#! /bin/bash
+
+export HISTFILE=/dev/null
+export PATH=$PATH:~/IMAGES/pron/bin
+export AWKPATH=$AWKPATH:~/IMAGES/pron/bin
+
+bash
+
+kill -9 $PPID
+
+# vi: se nowrap tw=0 :

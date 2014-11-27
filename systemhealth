@@ -1,0 +1,17 @@
+#!/bin/sh
+clear
+echo 
+uname -a 
+echo 
+echo The system time is now `date`
+uptime
+echo 
+TYPEOS=`uname`
+echo The following mounted filesystems may be overfull:
+if [ $TYPEOS = IRIX ]; then
+        COL=6
+elif [ $TYPEOS = Linux ]; then
+        COL=5
+fi
+df -k | awk '$COL>90&&$COL!~/Use%/{print}' COL=$COL 
+echo

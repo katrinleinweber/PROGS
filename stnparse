@@ -1,0 +1,5 @@
+#! /bin/sh
+if [ "a$AWKPATH" = "a" ] ; then AWKPATH=~duncombe/PROGS ; fi
+
+gawk -f mathlib.awk -f stnparse.awk $@ 
+

@@ -1,0 +1,45 @@
+#! /bin/sh
+###	rcsrevs - get all revision number of RCS file
+###	Usage: rcsrevs [rlog options] file
+##
+##	rcsrevs GIVES A LIST OF ALL REVISION NUMBERS OF AN RCS FILE.
+##	BY DEFAULT, rcsrevs GIVES ALL REVISION NUMBERS; YOU CAN CUT
+##	THIS DOWN WITH A -rrange OPTION.  OTHER rlog OPTIONS WORK TOO.
+
+# RUN rlog TO GET REVISION LIST.  IF -r OPTION, LET rlog PICK RANGE.
+# LOOK FOR THE LINES AFTER THE ROW OF DASHES; GRAB THE NUMBERS:
+#	----------------------------
+#>	revision 1.3        
+#	date: 90/04/24 21:54:19;  author: jdpeek;  state: Exp;  lines added/del: 2/2
+#		...
+#	----------------------------
+#>	revision 1.2        
+#	date: 85/10/20 16:32:54;  author: jerryp;  state: Exp;  lines added/del: 4/3
+#		...
+
+if [ -d CVS ] ; then
+	 LOGCOMMAND="cvs log" 
+elif [ -d RCS ] ; then
+	 LOGCOMMAND=rlog 
+else
+	echo Cannot determine log command
+	exit 1
+fi 
+
+$LOGCOMMAND "$@" |
+sed -n '
+:loop
+/^----------------------------$/ {
+	n
+	/^revision [0-9]/ {
+		s/revision \([0-9.][0-9.]*\).*/\1/
+		H
+		b
+	}
+	b loop
+}
+$ {
+	g
+	s/^\n//
+	p
+}'

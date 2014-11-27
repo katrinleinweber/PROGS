@@ -1,0 +1,11 @@
+#!/bin/sh
+#Check is a pine is running on this host
+
+pineproc=$(ps -ax | grep -v grep | grep -v $0 | grep pine)
+
+if [ -n "$pineproc" ]; then
+	echo pine is running
+else
+	echo no pine on this host
+fi
+

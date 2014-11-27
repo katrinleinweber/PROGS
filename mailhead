@@ -1,0 +1,11 @@
+#!/bin/sh
+echo 'From: "Humboldt" <humboldt@io-warnemuende.de>'
+echo "To: "
+echo "Subject: "
+date "+Date: %a, %e %b %Y %T %z (%Z)" 
+echo "MIME-Version: 1.0"
+echo "Content-Type: TEXT/PLAIN; charset=US-ASCII"
+echo 
+echo 
+
+

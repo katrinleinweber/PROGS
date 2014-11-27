@@ -1,0 +1,144 @@
+#!/bin/sh
+
+/usr/bin/gawk -f mathlib.awk --source '
+BEGIN{
+	data=0
+	monstr="Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+	n=split(monstr,monarr,/,/);
+	for (i=1;i<=n;i++){mon[monarr[i]]=sprintf("%02d",i)}
+	OFS=" "
+	cruise="cruise"
+	stn="stn"
+	grd="grd"
+	snd="snd"
+	gtim=""
+	}
+{gsub(//,"")}
+data==1 && $id["scan:"] >=0 {
+	gap=0;
+	if (id[pstring]>0){
+		if (gap){printf "\t"};printf "%g",$id[pstring]+0;gap=1}
+	if (id[tstring]>0){
+		if (gap){printf "\t"};printf "%g",$id[tstring]+0;gap=1}
+	if (id["sal00:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["sal00:"]+0;gap=1}
+	if (id["c0mS/cm:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["c0mS/cm:"]+0;gap=1}
+	if (id[ostring]>0){
+		if (gap){printf "\t"};printf "%g",$id[ostring]+0;gap=1}
+	if (id["sbeox0V:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["sbeox0V:"]+0;gap=1}
+	if (id["flC:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["flC:"]+0;gap=1}
+	if (id["wetStar:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["wetStar:"]+0;gap=1}
+	if (id["xmiss:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["xmiss:"]+0;gap=1}
+	if (id["seaTurbMtr0:"]>0){
+		if (gap){printf "\t"};printf "%g",$id["seaTurbMtr0:"]+0;gap=1}
+	if (id[astring]>0){
+		if (gap){printf "\t"};printf "%g",$id[astring]+0;gap=1}
+	printf "\n"
+	}
+/^\*/{ 
+	# this is software version and sensor SN
+	}
+/^\*\*/{
+	# this is operator entered comments
+	}
+/\*\* ReiseNr/{ cruise=$4}
+/\*\* Cruise:/{ cruise=$3 }
+# Earlier cruises had grid number under "Station"
+/\*\* StationNr=/{stn=$3}
+/\*\* Station:/ {if ($3 ~ /[[:alpha:]][[:digit:]]+/){stn=toupper($3)}
+		else{grd=$3} }
+/\*\* StatBez/{grd=$4};
+/\*\* Grid.*:/{
+	gsub(/\*\* Grid[^:]*:/,"");
+	grd=$0
+	} 
+/\*\* Ship.* *[Ss]tation:/{
+	gsub(/\*\* Ship.* *[Ss]t[^:]*:/,"");
+	stn=$1;
+	} 
+/\*\* Sounding:/{ snd=$3 }
+/\*\* korrLote/{ 
+	if (substr($0,14,8)+0!=0){
+		snd=substr($0,14,8)+0
+		}
+	else {
+		if (substr($0,24,8)+0!=0){snd=substr($0,24,8)+0}
+		}
+
+	}
+/\*\* Latitude:/{gsub(/\*\* Latitude:/,"");olat=parsepos($0)}
+/\*\* Longitude:/{gsub(/\*\* Longitude:/,"");olon=parsepos($0)}
+	# Use the NMEA position if available
+/^\* NMEA Latitude =/{gsub(/\* NMEA Latitude =/,"");nlat=parsepos($0)}
+/^\* NMEA Longitude =/{gsub(/\* NMEA Longitude =/,"");nlon=parsepos($0)}
+/^\* NMEA UTC \(Time\) =/{
+	gsub(/\* NMEA UTC \(Time\) =/,"");
+	ntim=$0; 
+	if (ntim~/[a-zA-Z]/){
+		com="date -d \"" ntim "\" +\"%Y/%m/%d %j %T\""
+		com | getline gtim
+		}
+	}
+/\*\* Startzeit/{ntim=$3}
+/\*\* GPS_Posn/{
+	nlat=parsepos($4 " " gensub(",",".","g",$5));
+	nlon=parsepos($6 " " gensub(",",".","g",$7));
+	}
+
+/^#/{
+	# this is sensor identification and column identifiers
+	}
+/^# name /{
+	col=$3+1; id[$5]=col;
+	}
+/^# start_time = /{d=$6 "/" mon[$4] "/" $5; stim=$7;day=date2day($6,mon[$4]+0,$5)} 
+/^\*END\*/{data=1
+	if (nlat!=""){lat=nlat} else {lat=olat};
+	if (nlon!=""){lon=nlon} else {lon=olon};
+	if (ntim==""){t=stim} else {t=ntim};
+	if (gtim!=""){d=gtim; day=""; t=""};
+	gsub(/ *$/,"",stn);gsub(/^ */,"",stn);gsub(/ +/,"_",stn)
+	gsub(/ *$/,"",grd);gsub(/^ */,"",grd);gsub(/ +/,"_",grd)
+	if (stn=="stn"){stn=grd; grd="1"};
+	print "C9199 ",stn,grd,lat,lon,d,day,t,cruise
+	print "& ZZ=" snd
+	if (nlat!=""||nlon!=""){
+		print "# Using NMEA position"
+		}
+	if ((nlat!=""||nlon!="")&&(olat!=""||olon!="")){
+		print "# Operator entered " olat "," olon " as position"
+		}
+	if (ntim!=""){print "# NMEA time was " ntim}
+	if (stim!=""){print "# start_time was " stim}
+	print "# " strftime("%Y/%m/%d %H:%M") ": convert .cnv to .s87"
+	for (j in id){
+		if (j=="t068:"||j=="t068C:"||j=="t090:"||j=="t090C:"){tstring=j}
+		if (j=="pr:"||j=="prDM:"){pstring=j}
+		if (j=="sbeox0ML/L:"||j=="oxML/L:"){ostring=j}
+		if (j=="altM:"||j=="alt:"){astring=j}
+		}
+	gap=0;
+	printf "%s", "@"
+	if (id[pstring]>0){if (gap){printf "\t"};printf "%s","PR";gap=1}
+	if (id[tstring]>0 || id["t068:"]>0){if (gap){printf "\t"};printf "%s","TE";gap=1}
+	if (id["sal00:"]>0){if (gap){printf "\t"};printf "%s","SA";gap=1}
+	if (id["c0mS/cm:"]>0){if (gap){printf "\t"};printf "%s","CO";gap=1}
+	if (id[ostring]>0){if (gap){printf "\t"};printf "%s","OX";gap=1}
+	if (id["sbeox0V:"]>0){if (gap){printf "\t"};printf "%s","OC";gap=1}
+	if (id["flC:"]>0){if (gap){printf "\t"};printf "%s","FL";gap=1}
+	if (id["wetStar:"]>0){if (gap){printf "\t"};printf "%s","CA";gap=1}
+	if (id["xmiss:"]>0){if (gap){printf "\t"};printf "%s","TR";gap=1}
+	if (id["seaTurbMtr0:"]>0){if (gap){printf "\t"};printf "%s","TU";gap=1}
+	if (id[astring]>0){if (gap){printf "\t"};printf "%s","AL";gap=1}
+	printf "\n"
+
+
+# PR\tTE\tSA\tOX\tFL\tTR" 
+	OFS="\t"; 
+	}
+' $@

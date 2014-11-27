@@ -1,0 +1,38 @@
+#!/usr/bin/gawk -f
+# call with 
+#	trims87s [COLS="acronyms"] [filenames]
+# example
+#	trims87s COLS=PR,TE,SA,OX *.s87
+#
+BEGIN{head=1;data=0;OFS="\t"; COLS="PR,TE,SA,OX"}
+FNR==1{ nc=split(COLS,mcol,",")}
+/^@/{data=1;
+     head=0;
+     sub("^@","");
+	$0=toupper($0)
+     cols=split($0,param);
+     for (i=1;i<=cols;i++){column[param[i]]=i};
+     print "# " strftime() ": trims87s: Extraneous/Bad data columns trimmed"
+     print "# " strftime() ": Columns were: " $0
+     printf "@";
+     }
+data{
+	# Pres=column["PR"]==0?"":$column["PR"];
+	# Temp=column["TE"]==0?"":$column["TE"];
+	# Salt=column["SA"]==0?"":$column["SA"];
+	# Oxyg=column["OX"]==0?"":$column["OX"];
+	i=1;
+	col[i]=column[mcol[i]]==0?"":$column[mcol[i]];
+	printf "%s",col[i] ""
+	for (i=2;i<=nc;i++){
+		col[i]=column[mcol[i]]==0?"":$column[mcol[i]];
+		printf "\t%s",col[i] ""
+		}
+	printf "\n"
+	
+	
+	# print Pres,Temp,Salt,Oxyg
+	# print Pres,Temp,Salt
+	}
+head{print}
+

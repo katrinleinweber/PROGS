@@ -1,0 +1,12 @@
+#!/usr/bin/gawk -f 
+BEGIN{	
+	"date -d \"2001/11/02 08:37\" \"+%s\"" | getline T0
+	"date  \"+%s\"" | getline T1
+	dT=T0-T1;
+	M=int(dT/60);
+	H=int(M/60);
+	D=int(H/24);
+	d=D; h=H-D*24;m=M-H*60;s=dT-M*60;
+	print d " days, " h " hours, " m " minutes, " s " seconds"
+}
+

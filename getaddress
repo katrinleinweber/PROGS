@@ -1,0 +1,15 @@
+#!/bin/sh
+
+DATAROOT=DOCS/ADDRESSBOOKS/sfrimail.nab
+DATAFILE=~/$DATAROOT
+
+if [ ! -e $DATAFILE ]; then 
+	DATAFILE=~/eddyhome/$DATAROOT
+fi 
+
+if [ ${#@} -eq 0 ]; then 
+echo Usage: getaddress \<egrep options\> \<egrep regex\>
+exit 1
+fi
+
+egrep $@ $DATAFILE | gawk  'BEGIN{FS=","}{gsub(/"/,""); print $2,"<" tolower($4) ">" }' | sort | uniq

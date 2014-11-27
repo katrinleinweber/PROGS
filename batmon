@@ -1,0 +1,8 @@
+while true; do 
+	REMAIN=$(cat  /proc/acpi/battery/BAT0/state |
+			awk '/remaining/{print $3}')
+	FULL=$(cat  /proc/acpi/battery/BAT0/info | 
+			awk '/design capacity:/{print $3}')
+	echo $REMAIN $FULL | awk '{print $1 "/" $2 " = " $1/$2}'
+	sleep 10
+done

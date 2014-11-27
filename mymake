@@ -1,0 +1,9 @@
+
+# stupid fucking bash won't do completion for make command unless
+# Makefile exists in current directory and has explicit
+# instruction to make what you want to complete. Which, excuse
+# me, is fucking useless. with mymake yuou can complete anything
+# you fucking like and it will not complain. So fuck you bash and
+# make.
+
+make $@

@@ -1,0 +1,10 @@
+#! /bin/sh
+
+if [ $1 = eddy -o $1 = EDDY ]
+then
+#	echo testing eddy
+	nwuserlist -S $1 -U guest -P guest -a
+else
+#	echo testing $1
+	nwuserlist -S $1 -U guest -n -a
+fi

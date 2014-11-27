@@ -1,0 +1,241 @@
+#!/bin/sh
+
+# dbriefcase    This shell script will synchronize files between two
+#               computer systems using the rsync utility.  Dbriefcase
+#               uses ssh if available, and rcp and rsh if not.
+#
+# Sample usages:
+#
+#      Synchronize all top-level files between my laptop directory
+#      /home/projects and my workstation DBUSER@REMOTEMACHINE:/work/dab/projects,
+#      SKIPPING ALL SUBDIRECTORIES.
+#
+#          dbriefcase --some /home/projects/ /work/dab/projects/
+#
+#      Recursively synchronize my laptop directory /home/projects
+#      and the workstation DBUSER@REMOTEMACHINE:/work/dab/projects, creating
+#      new subdirectories as needed on either system.
+#
+#          dbriefcase /home/projects/ /work/dab/projects/
+#
+#      Recursively synchronize my laptop directory /home/dbyrne to a
+#      mirrored directory structure DBUSER@REMOTEMACHINE:home/dbyrne, creating
+#      new subdirectories as needed.
+#     
+#      dbriefcase --all /home/dbyrne/ *OR* dbriefcase /home/dbyrne/
+#
+#      Notes: The --all switch is the default behavior.
+
+# Copyright (C) 2002 by Deirdre Byrne (dbyrne@umeoce.maine.edu)
+# This software is protected by the GNU General Public License.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+# Set up the ENVIRONMENT for YOUR OWN dbriefcase.   DIFFTIME limits the
+# number of minutes by which the time and date on your machines may disagree;
+# if the difference is larger than DIFFTIME, dbriefcase will exit with a warning
+# message.
+
+# ----------------------------
+# Modifications: C M Duncombe Rae <duncombe@mcm.wcape.gov.za> 2003/01/28
+#
+# ** change envar USER to DBUSER throughout: $USER is a common
+#    envar usually set by the shell during login. Better to use a
+#    different variable name.
+# ** For clarity change MACHINE to REMOTEMACHINE throughout.
+# ** Check for file .dbriefcase in the users home directory. Use those
+#    values for preference. [ Note: KLUDGE! should check if DBUSER, 
+#    and REMOTEMACHINE are set in the environment, then check for 
+#    config file, then for option to override on the command line. ]
+# ** nswitch > 1 was counted as an error, yet the exit code 0 indicated
+#    that the command exited normally!?!?  Better to allow last option
+#    specified to be used. Also...
+# ** Deirdre is obviously confused about what indicates a successful 
+#    exit status. 0 is success, 1 is failure. Fixed.
+# ** Error messages gathered together into function for consistency.
+#    Error message made consistent with unix style
+# 
+
+function errormessage () {
+	echo -e '
+Usage: $0 [OPTIONS] localdirectory [remotedirectory]
+  where OPTIONS are:
+  --some  : only contents, do not descend subdirectories
+  --all   : include contents and descend subdirectories
+  localdirectory is local directory to mirror.
+  remotedirectory is directory on remote machine to copy.'
+
+	if [ ! -z "$@" ]; then
+		echo -e  "\n$@\n"
+	fi
+}
+
+if [ -f $HOME/.dbriefcase ]; then
+	. $HOME/.dbriefcase
+else
+	DBUSER=$USER
+	REMOTEMACHINE=laptop
+fi
+
+DIFFTIME=5
+
+# set the default switch
+switch="--all"
+#dirs=""
+nswitch=0
+
+# get switch and discard from list of input args
+for arg
+  do
+    case "$arg" in
+     --*) switch="$arg"
+          nswitch=$[nswitch+1]
+	  shift
+          ;;
+    esac
+  done
+
+###### 
+# # check that nswitch is not > 1
+# if [ $nswitch -gt 1 ]; then
+#   echo "too many switches"
+#   exit 1
+# fi
+#####
+
+# now get the directories
+dir1="$1"
+dir2="$2"
+
+# No second directory given, assume a parallel directory structure
+if [ -z $dir2 ]; then
+ dir2=$dir1
+fi
+
+# this check needs to be done before changes made to the dir names
+# check LOCAL dir
+if [ -z $dir1  ]; then
+   errormessage
+   # echo "Usage dbriefcase [--all/--some] /LOCAL/ /REMOTE/"
+   exit 1
+fi
+
+# # Get final character of dirspec.  Later we'll make sure this
+# # char is / for both dirs.  The trailing slash in conjunction
+# # with the -a option means copy contents of this dir.  A lack
+# # of trailing / in conjunction with the -a option would indicate
+# # copy the directory itself, then its contents. 
+# t1=`echo $dir1 | awk -F "" '{print $NF}'`
+# t2=`echo $dir2 | awk -F "" '{print $NF}'`
+
+##### heck why not do it right here??? 
+dir1=`echo $dir1 | awk '!/\/$/{ $0=$0 "/"}{print}'`
+dir2=`echo $dir2 | awk '!/\/$/{ $0=$0 "/"}{print}'`
+
+	
+####### if it must be a directory, then check that it IS a directory!!
+if [ ! -d $dir1 ]; then
+	errormessage "$dir1 must be a directory"
+# if [ "$t1" != "/" ]; then
+# echo "Error: $dir1 must be a directory."
+    exit 1
+fi
+#######
+
+if [ ! -x "$dir1" ]; then
+#   echo "Usage dbriefcase /LOCAL/ /REMOTE/.  LOCAL directory not found."
+  errormessage "$dir1 not found"
+  exit 1
+fi
+
+# check REMOTE dir
+###### 
+# no need to check dir2, we already set it equal to dir1 !
+# if [ -z $dir2  ]; then
+#    echo "Usage dbriefcase /LOCAL/ /REMOTE/.  REMOTE directory not specified."
+   # exit 1
+# fi
+# if [ "$t2" != "/" ]; then
+ # echo "Error: $dir2 must be a directory."
+ # exit 1
+# fi
+
+# check for ssh
+  secureopts=""
+  protocol=""
+if [ -x `which ssh` ]; then
+  secureopts="-e"
+  protocol="ssh"
+fi
+
+# now make sure the remote directory EXISTS
+if [ -n $DBUSER ]; then
+  chkdir="$DBUSER@$REMOTEMACHINE:$dir2"
+fi
+rsync $secureopts $protocol -a $chkdir > /tmp/rsync_chkdir 2>&1
+
+direxist="`grep 'No such file' /tmp/rsync_chkdir | awk '{print $1}'`"
+if [ -n "$direxist" ]; then
+  echo "REMOTE directory $chkdir does not exist"
+  # clean up and exit
+  rm -f /tmp/rsync_chkdir
+  exit 1
+fi
+
+# Lastly, check that the time and date are reasonably well synchronized
+# between the two machines.  Because not all awks support squares (^2) 
+# or absolute values, the following looks a little odd (but it works!).
+s1time=`date +"%Y %j %k %M"`
+if [ -n $protocol ]; then
+    s2time=`ssh $DBUSER@$REMOTEMACHINE 'date +"%Y %j %k %M"'`
+else
+    s2time=`rsh $REMOTEMACHINE -l $DBUSER 'date +"%Y %j %k %M"'`
+fi
+
+dtime=`echo $s1time $s2time | awk '{print ($1-$5)*365*24*60 + ($2-$6)*24*60 + ($3-$7)*60 + ($4-$8)}'`
+dtime=`echo $dtime $dtime | awk '{print sqrt($1*$2)}'`
+if [ $dtime -gt $DIFFTIME ]; then
+  echo "Please check time and date synchronization between your systems."
+  exit 1
+fi
+
+case "$switch" in
+--all)
+        # COPY FROM dir1 TO dir2
+        echo "copying from $dir1 to $DBUSER@$REMOTEMACHINE:$dir2"
+        rsync $secureopts $protocol -aubz --suffix=".dbu" --exclude="core" --exclude="cache" \
+             --exclude="*.dbu" --exclude="*.~*~" $dir1 $DBUSER@$REMOTEMACHINE:$dir2
+
+        # COPY FROM dir2 TO dir1
+	echo "copying from $DBUSER@$REMOTEMACHINE:$dir2 to $dir1"
+	rsync $secureopts $protocol -aubz --suffix=".dbu" --exclude="core" --exclude="cache" \
+	    --exclude="*.dbu" --exclude="*.~*~" $DBUSER@$REMOTEMACHINE:$dir2 $dir1
+	;;
+--some)
+#         echo "Option --some is not implemented"
+        # strip trailing / from dirspecs
+        dir1=`echo $dir1 | awk -F ""  '{ for (i = 1; i < NF; i++) printf "%s", $i}'`
+        dir2=`echo $dir2 | awk -F ""  '{ for (i = 1; i < NF; i++) printf "%s", $i}'`
+        # COPY FROM dir1 TO dir2
+        echo "copying from $dir1 to $DBUSER@$REMOTEMACHINE:$dir2"
+        rsync $secureopts $protocol -lptgoubz --suffix=".dbu" --exclude="core" --exclude="cache" \
+             --exclude="*.dbu" --exclude="*.~*~" $dir1/* $DBUSER@$REMOTEMACHINE:$dir2
+
+        # COPY FROM dir2 TO dir1
+	echo "copying from $DBUSER@$REMOTEMACHINE:$dir2 to $dir1"
+	rsync $secureopts $protocol -lptgoubz --suffix=".dbu" --exclude="core" --exclude="cache" \
+	    --exclude="*.dbu" --exclude="*.~*~" $DBUSER@$REMOTEMACHINE:$dir2/* $dir1
+        ;;
+esac
+
+# clean up
+rm -f /tmp/rsync_chkdir
+
+exit 1

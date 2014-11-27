@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# this script finds the diff of two pdf files on the command line
+
+if [ $# -lt 2 ]; then 
+	echo requires 2 pdf files to diff
+	exit 1
+fi
+
+F1=`mktemp -t`
+F2=`mktemp -t`
+
+# pdftotext does a good job, but forces us to use '-' to put
+# output to stdout.  Alternately use ps2ascii. Beware pdftotext
+# fails in some documents with copyright notices.
+
+pdftotext $1 $F1
+pdftotext $2 $F2
+
+diff $F1 $F2
+
+# [ $# -eq "0" ] && { echo "$0: Missing file name"; exit 1; }
+# 
+# force=false
+# 
+# # test which reader to use
+# READPDF=`which pdftotext` ; OUTIND="-";
+# [ "$READPDF" ] || { READPDF=`which ps2ascii`; OUTIND=""; }
+# [ "$READPDF" ] || { echo No pdf reader found; exit 10 ; }
+# 
+# if $force; then
+#	 READPDF=ps2ascii 
+#	 OUTIND=""
+# fi
+# 
+# for FILE in $@ ; do  
+#   if [ ! -e  $FILE ] ; then
+#     echo $FILE not found
+#   elif [ -d $FILE ] ; then 
+#     echo $FILE is directory
+#   else
+#	 # DEST="../Reprints/inrefs/new/pdf"
+#	 DEST="inrefs"
+# 
+#	 # LINK=$(find $FILE -printf "%l")
+#	 # echo $LINK
+# 
+# 
+# 
+#	 acroread $FILE &
+# 
+#	 locate $(basename $FILE)
+#	 echo $FILE
+#	 echo $( basename $FILE )
+#	 ASCIIFILE=$(mktemp -t ascii.XXXXXXXXXX)
+#	 $READPDF $FILE $OUTIND > $ASCIIFILE 
+# 
+#	 (
+#	    echo Using $READPDF
+#	    locate `basename $FILE`
+#	    echo " " $FILE ; echo " " $(basename $FILE) ;
+#		 # grep -iE "\<doi\>" | sed -e 's/^.*[dD][oO][iI]:\? *//' -e 's/\.[ 	]*$//' 
+#	    awk 'BEGIN{dp=1}/References/{dp=0}dp{print}' $ASCIIFILE |
+#		 grep -iE "\<doi\>" | sed -e 's/^.*[dD][oO][iI]:\? *//' -e 's/\([^ 	]\+\)[ 	]*.*$/\1/' 
+#	    cat $ASCIIFILE
+#	 ) |
+#		 vim "+so view.com" -
+# 
+# # vim -R -c "so! view.com" -
+# 
+#	 echo "Move ${FILE} to $DEST"
+#	 # echo "Move  $LINK to $DEST/pdf"
+#	 read -p "(Y/N/T)? " A
+# 
+#	 if [ "$A" = "y" -o "$A" = "Y" ]; then 
+#		 if [ -d $DEST ]; then 
+#			 mv -iv  $FILE  $DEST
+#			 ( cd $DEST
+#			   md5sum `basename $FILE` >> MD5SUM
+#			   ../makeindex -a $ASCIIFILE |
+#			   sed "s/^[^	]*/$(basename $FILE)/" >> INDEX.idx
+#			 )
+#		 else
+#			 echo $DEST is not a directory. Not moving $FILE
+#		 fi
+#	 elif [ "$A" = "t" -o "$A" = "T" ]; then
+#		 if [ -d trash ]; then
+#			 mv -iv $FILE trash
+#		 else
+#			 echo "Cannot trash file. No trash directory."
+#		 fi
+#	 fi
+#	 rm $ASCIIFILE
+#   fi
+# done
+# 
+# du -sh inrefs
+# 
+# # 

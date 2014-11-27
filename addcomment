@@ -1,0 +1,11 @@
+#!/bin/sh
+# Adds a comment to an s87 file, just before the column id line
+#
+# scriptfile=`uniqfile`
+# cat << ENDIN > $scriptfile
+# /^@/{print "# " strftime("%d-%b-%Y %H:%M") ": $@ " }{print}
+# ENDIN
+# gawk -f $scriptfile
+# rm $scriptfile
+gawk /\^\@/\{print\ \"#\ \"\ strftime\(\"%Y-%m-%d\ %H:%M\"\)\ \":\ "$@"\ \"\ \}\{print\}
+

@@ -1,0 +1,51 @@
+#! /bin/bash 
+#
+# Was this working properly? I ask because now it does not. The second page
+# is overwriting the first page.  Looking at it, the code calls for a post
+# increment (PAGENO++) where there should be a pre increment (++PAGENO). My
+# guess is the code never worked properly! Hoping this bugfix fixes it...
+# 2013-04-12 CMDR on SPURS-2 EN-255
+# 
+
+if [ $# -eq 0 ]; then 
+	echo Usage: $0 \[gs options\] \<from file\> \<to-file-template\>
+	echo to-file-template is leading characters to which
+	echo script will add page numbers and \".pdf\"
+	echo Example: $0 doc.pdf newdoc
+	echo produces newdoc1.pdf, newdoc2.pdf etc.
+	exit 1
+fi
+
+NOPTS=$#
+while [ $((I++)) -lt $((NOPTS-1))  ] ; do 
+    	case $1 in 
+		-*)	GSOPTIONS[$((J++))]=$1
+	    		;; 
+		*) 	INFILES[$((L++))]=$1
+	    		;;
+	esac
+	shift
+done
+
+# echo GSOPTIONS = ${GSOPTIONS[*]}
+# echo INFILES = ${INFILES[*]}
+
+TEMPLATE=$1
+PAGENO=1
+OUTFILE=${TEMPLATE}${PAGENO}.pdf 
+PAGES=`identify $INFILES | wc -l`
+
+# echo OUTFILE = $OUTFILE
+# echo PAGES = $PAGES
+
+while [ $PAGENO -le $PAGES ]; do 
+	echo $OUTFILE $PAGENO/$PAGES
+	gs -q -dSAFER -dNOPAUSE -dBATCH ${GSOPTIONS[@]} \
+		-dFirstPage=${PAGENO} -dLastPage=${PAGENO} \
+		-sDEVICE=pdfwrite -sOutputFile=${OUTFILE} \
+		${INFILES[@]} 
+
+	OUTFILE=${TEMPLATE}$((++PAGENO)).pdf 
+done
+
+

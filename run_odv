@@ -1,0 +1,19 @@
+#! /bin/csh -f
+
+# script to run Ocean Data View (mp)
+
+# © 2002 R. Schlitzer,
+#        Alfred Wegener Institute for Polar and Marine Research,
+#        Bremerhaven, Germany
+#        Email: rschlitzer@awi-bremerhaven.de
+
+
+# set ODVMPHOME to the full path-name of the odvmp install-directory
+setenv ODVMPHOME /opt/odvmp
+
+# set ODVMPHOST to the name of the computer running odv
+setenv ODVMPHOST ring
+
+# nothing to be changed below this line
+setenv PATH ${PATH}:${ODVMPHOME}/bin_linux-i386
+odvmp $1 $2

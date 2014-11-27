@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# LOGFILE="/tmp/desktop.log"
+# echo "#####################################################" >> $LOGFILE 2>&1
+# date >> $LOGFILE 2>&1
+# echo -n "DISPLAY variable: " >> $LOGFILE 2>&1
+# echo $DISPLAY >> $LOGFILE 2>&1
+# echo "Modify display: " ` echo $DISPLAY | sed -e "s/$HOSTNAME//"` >> $LOGFILE 2>&1
+# which vmware >> $LOGFILE 2>&1
+# echo "HOST variable: $HOST" >> $LOGFILE 2>&1
+# echo "HOSTNAME variable: $HOSTNAME" >> $LOGFILE 2>&1
+
+# if [ $HOSTNAME == "ring.wcape.gov.za" -o $HOSTNAME == "ring" ]; then
+# 	xhost + $HOSTNAME
+# 	DISPLAY=$( echo $DISPLAY | sed -e "s/$HOSTNAME//" )
+# 	/usr/local/bin/vmware
+# else
+# 	echo "This script only runs from host ring"
+# 	exit 1
+# fi

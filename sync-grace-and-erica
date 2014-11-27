@@ -1,0 +1,104 @@
+
+echo this script is not complete or foolproof yet. DO NOT RUN IT!
+exit 1
+
+if [ `hostname` = grace ] ; then
+	GRACE=""
+	ERICA="alberti:"
+	COMMAND="-e ssh -p 31893"
+elif [ `hostname` = erica ] ; then
+	GRACE="grace:"
+	ERICA=""
+	COMMAND=""
+else
+	echo "Wrong hosts\!"
+	exit 2
+fi
+
+HOME=/home/duncombe
+MESSAGE="Automatic synchronization between GRACE and ERICA. `fdate /`"
+
+#################################
+###  REFERENCES
+#################################
+
+
+# synch up the inrefs (refs already processed) without deleting anything; first grace to erica
+DIRECTORY=${HOME}/Reprints/incoming/inrefs/
+rsync ${COMMAND} -Cauzv --exclude-from=${DIRECTORY}/.exclude ${GRACE}${DIRECTORY} ${ERICA}${DIRECTORY}
+
+# then erica to grace
+rsync ${COMMAND} -Cauzv --exclude-from=${DIRECTORY}/.exclude ${ERICA}${DIRECTORY} ${GRACE}${DIRECTORY}
+
+# now sync up the waiting references, except files in CVS, also not deleting anything 
+# be sure $DIRECTORY is synched up to CVS! And create a .exclude
+# file that excludes all files in CVS ,and also .exclude. 
+DIRECTORY=${HOME}/Reprints/incoming/
+rsync ${COMMAND} -Cauzv --exclude-from=${DIRECTORY}/.exclude ${GRACE}${DIRECTORY} ${ERICA}${DIRECTORY}
+
+rsync  ${COMMAND} -Cauzv --exclude-from=${DIRECTORY}/.exclude ${ERICA}${DIRECTORY} ${GRACE}${DIRECTORY}
+
+# synch MD5SUM and INDEX.idx by hand (easier to put them in CVS
+# and use that to synch them?
+# They are in CVS. How to ci and co? Must be done by hand or
+# under terrible difficulty with ssh from any machine
+
+
+# run this from incoming
+
+cd ~/Reprints/incoming/inrefs
+
+#
+# Threre will be tears when you hit a filename with spaces in it.
+# 
+for f in `awk '{print $2}' MD5SUM ` ; do 
+	for g in `find ~/Reprints/incoming/  \
+		\( \( -name inrefs -o -name trash \) -prune \) \
+		-o -name $f -print`; do 
+		[ $( diff "$f" "$g" ) ] || mv -iv "$g" ../trash
+	done
+
+done 
+
+###################################
+#### PROGS
+###################################
+
+pushd ~/PROGS
+cvs -q upd
+cvs ci -m"$MESSAGE"
+
+popd 
+
+###################################
+#### MATLAB
+###################################
+
+pushd ~/matlab
+cvs -q upd
+cvs ci -m"$MESSAGE"
+popd
+
+##################################
+#### SCIENCE LOG BOOK
+##################################
+
+pushd ~/WORK/DIARY
+cvs -q upd 
+cvs ci -m"$MESSAGE"
+popd
+
+##################################
+#### WORK/WHOI/ADMIN
+##################################
+
+# cvs
+
+
+
+
+##################################
+
+# cvs -q upd -l WORK/WHOI
+
+

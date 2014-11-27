@@ -1,0 +1,3 @@
+#! /bin/sh
+xmodmap -e "keysym BackSpace = Delete" -e "keysym Delete = BackSpace"
+

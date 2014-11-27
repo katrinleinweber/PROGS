@@ -1,0 +1,117 @@
+#!/usr/bin/gawk -f
+# Calculate oxygen concentration from Winkler titration
+#
+# Usage: 
+
+# Program notes: W_ indicate molecular weight of
+# 		 V_ indicates volume of
+#		 M_ indicates mass of
+
+# Created: 1998 ? At sea, Africana.
+# Modified: 2002-03-06: some cosmetics
+#
+
+# 		
+BEGIN{
+	OxyVolFil="BottleVolumes.dat";
+	OxyCalFil="ThioStandard.dat";
+	OxyResFil="oxygen.csv";
+
+	OFS="\t"
+
+	W_KIO3=35.67;
+	V_KIO3=20;
+######
+#
+# Standardize the Thiosulphate
+#
+	getline < OxyCalFil
+	if ( $0 == "" ){
+		badfile=1; 
+		print OxyCalFil " not found. Enter Thiosulphate Standardization data."
+		Thiodata="/dev/stdin"
+		printf "Enter mass of KIO3 (potassium iodate) used in "
+		printf "making up the standard\n"
+		getline M_KIO3 < Thiodata
+		}
+	else {
+		badfile=0;
+		print OxyCalFil " found. Using the data in this file."
+		print "Delete or rename it if you want to enter new Standardization Data.\a"
+		Thiodata=OxyCalFil
+		M_KIO3=$1;
+		}
+
+
+#
+# Read Thiosulphate concentration
+
+	if ( badfile == 1 ){
+	print "Enter standardization titrations" }
+	V_Thio=0; N=0;
+	while ( getline < Thiodata ){
+		if ( $0 !~ /^[ 	]*$/ ){
+			V_Thio+=$1;
+			N++;
+			}
+		}
+	V_Thio=V_Thio/N;
+	print "Average titration volume = " V_Thio
+
+	if ( badfile == 1 ){
+		
+		print M_KIO3 > OxyCalFil
+		print V_Thio > OxyCalFil
+	}
+	N_Thio= V_KIO3 * M_KIO3 / W_KIO3 / V_Thio ;
+	print "Thio concentration = " N_Thio
+
+	Factor = 5600 * N_Thio ;
+	print "Factor, f = " Factor
+
+#
+# Read bottle volumes from file
+
+	 system("touch " OxyVolFil)
+	 while ( getline < OxyVolFil ){
+		if ( $0 !~ /^[ 	]*#/ ){
+			V_Sample[$1]=$2;
+		 	}
+		}
+#
+# Ask some station identification
+	print "Enter station or batch identification "
+	getline Stn_ID
+	print "Station: ",Stn_ID >> OxyResFil
+	print "Bottle","BVol","ThioTitre","Winkler" >> OxyResFil
+
+	print "Enter Bottle Number and Titration Volume "
+
+}
+{	
+	BNum=$1;
+	if ( NF==1 ){ getline V_Thio }
+	else {
+		if (NF==2 ){ V_Thio=$2 }
+		else {
+			if ( NF==3 ) { V_Sample[BNum]=$2;
+ 			print BNum,V_Sample[BNum] >> OxyVolFil
+					V_Thio=$3 }
+		}
+	}
+	if ( V_Sample[BNum]=="" ){
+		print "\aEnter sample volume for bottle " BNum
+		getline V_Sample[BNum];
+ 		print BNum,V_Sample[BNum] >> OxyVolFil
+	}
+	C_Sample = Factor * V_Thio / (V_Sample[BNum]-2) ;
+	printf "Bottle %i (%g ml) titr %g ml = %6.3f ml/l \n",BNum,V_Sample[BNum],V_Thio,C_Sample
+	print BNum,V_Sample[BNum],V_Thio,C_Sample >> OxyResFil
+	print "Enter Bottle Number and Titration Volume "
+}
+END{
+	print " "
+	print "Thiosulphate standardization file: ", OxyCalFil
+	print "               Bottle volume file: ", OxyVolFil
+	print "                       Results in: ", OxyResFil
+}

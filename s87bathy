@@ -1,0 +1,80 @@
+#!/bin/sh
+
+# FILE=${1:?$0 Cannot process standard input. Needs a filename}
+FILE=`uniqfile`
+cat $1 > $FILE
+
+# cat $FILE | awk 'NR==1 || /^&/{print}'
+head -n 1 $FILE
+cat $FILE | gawk -f mathlib.awk -f sealib.awk --source '
+
+BEGIN{
+	# we are not processing data yet
+	data=0
+	# latitude is not a valid value
+	Lati=-90
+	# process the last NUM readings of the cast
+	NUM=5
+	# look at bathymetry and altitude less than these values
+	bathy=14000
+	alti=14000
+	}
+
+{gsub(//,"")}
+
+FNR==1{Lati=$4}
+
+/^@/{	sub(/^@/,""); 
+	# split and parse the column identifier line
+	n=split($0,cols,"\t"); 
+	for (i=1;i<=n;i++){COL[cols[i]]=i}; 
+	# decide if we need to calculate depth or if its available
+	if ( COL["DE"]==0 && COL["PR"]>0 && Lati>-90 ) { calc_dep=1 }
+	# decide if we have enough info to determine the bathy
+	if ( ( COL["DE"]!=0 || calc_dep ) && COL["AL"]>0 ){docalc=1}
+	data=1
+	}
+
+data && docalc {
+	# depth calculation or use depth column
+	# put the info into a buffer NUM elements long
+	DE[j%NUM]=calc_dep?sw_dpth($COL["PR"],Lati):$COL["DE"]
+	AL[j%NUM]=$COL["AL"]
+	j++
+	}
+
+END{ if ( docalc ) {
+		# find the smallest altitude in the buffer
+		for (i=0; i<NUM; i++){
+			BT[i]=DE[i]+AL[i];
+			bathy=bathy>BT[i]?BT[i]:bathy;
+			alti=alti>AL[i]?AL[i]:alti;
+			}
+		DATE=strftime("%Y-%m-%d %H:%M")
+	    if ( alti <= 22 ){
+	        print "&ZZ=" bathy " ZM=" alti
+	        print "# " DATE ": Bathymetric depth calculated from " 
+	        print "# " DATE ": altimeter value and probe depth was " bathy 
+	        print "# " DATE ": Closest approach to bottom was " alti 
+	      } else
+	      {
+	        print "# &ZZ=" bathy " ZM=" alti
+		print "# " DATE ": Altimeter greater than 20m from bottom"
+                print "# " DATE ": Bathymetric determination not reliable"
+                print "# " DATE ": and commented out. Use sounding instead"
+              }
+	    }
+	}
+'
+
+# cat $FILE | awk 'NR>1 && !/^&/{print}'
+
+cat $FILE | awk '
+	/^@/{	"date \"+%Y-%m-%d %H:%M\"" | getline A;
+		print "# " A ": s87bathy: Calculate bathymetry"
+		}
+	/^&/{	printf "#" }NR>1{print}'
+
+
+rm $FILE
+

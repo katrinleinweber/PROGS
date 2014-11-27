@@ -1,0 +1,9 @@
+#!/bin/zsh
+FILE=${1:?}
+if [ ! -f $FILE ]; then echo Enter full filename ; exit 1; fi
+latex $FILE
+latex $FILE
+# xdvi -paper a4r $FILE:r.dvi
+# dvips -t a4 -t landscape -O 0in,0in $FILE:r.dvi
+dvips -f -t letter -t landscape -O -0.5in,-2.0in $FILE:r.dvi > $FILE:r.ps
+# gv -seascape $FILE:r.ps

@@ -1,0 +1,21 @@
+#!/bin/zsh
+
+if [ $# = 0 ]; then
+cat << ENDIN  
+asc2prs: creates .PR2 and .s87 files from .HDR and .ASC files
+requires .HDR and .ASC files available for the command line arguments
+ENDIN
+fi
+
+for f in $* ; do
+	F=$f:r
+	if [ -s $F.HDR -a -s $F.ASC ]; then
+		gawk -f asc2prs.awk $F.ASC
+		echo Creating $F.s87
+		gawk -f prs2s87.awk $F.PR2 > $F.s87
+	else
+		echo Missing .HDR or .ASC file for $F
+	fi
+done
+
+

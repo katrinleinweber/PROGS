@@ -1,0 +1,32 @@
+#!/bin/bash
+# Converts hydrobase data to s87 format files
+
+awk -f mathlib.awk --source '
+   BEGIN{
+	base_ofn="stn";
+	cntr=0;
+   	stnr=1;
+	stnnum=0;
+	ofn="";
+	}
+   /^\*\*/{ stnr=0;
+	if(ofn!=""){close(ofn)};
+	# stnnum++;
+ 	}
+   stnr==1{
+	ofn=base_ofn "_" sprintf("%09.4f",$10) "_" sprintf("%08.4f",$9) "_" sprintf("%04d%02d%02d",$5,$6,$7) ".s87";
+	print ofn
+	print "C" $1 $2, $4, 1, $9, $10, $5 "/" $6 "/" $7, date2day($5,$6,$7), "12:00", $3 > ofn
+	}
+   stnr==2{ print "@" $0 > ofn}
+   stnr>=3{ print > ofn}
+   {	stnr++;}
+
+
+   END{ 
+	close(ofn)
+      }
+
+ ' $@
+
+

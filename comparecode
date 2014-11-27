@@ -1,0 +1,15 @@
+#!/bin/bash
+
+INFILE1=${1:?Usage: $0 file1 file2}
+INFILE2=${2:?Usage: $0 file1 file2}
+
+TEMP1=$(mktemp /tmp/compare.XXXXXXXX)
+TEMP2=$(mktemp /tmp/compare.XXXXXXXX)
+
+egrep -v "^C|^c" $INFILE1  > $TEMP1
+egrep -v "^C|^c" $INFILE2  > $TEMP2
+
+diff -bB $TEMP1 $TEMP2
+
+rm $TEMP1 $TEMP2
+

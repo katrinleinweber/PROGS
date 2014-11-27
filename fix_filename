@@ -1,0 +1,19 @@
+#! /bin/bash
+# only one filename per call, quoted
+
+# FN=${@}
+
+if [ $# -eq 0 ]; then echo `basename $0` \"filename\" ; exit 1; fi
+while [ $# -ge 1 ]; do
+	FN=${1:?}
+	NFN=`echo  "$FN" | sed -e 's/ /_/g' -e 's/\&/+/g'`
+
+	if [ -e "$NFN" ] ; then 
+		echo File \"$NFN\" already exists
+		# exit 1
+	else
+		mv -iv "$FN" "$NFN"
+	fi
+	shift
+done
+

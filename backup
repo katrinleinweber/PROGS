@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ ! -f ${1:?} ]
+then
+	echo Trying to make backup copies of $1: File not found
+else
+	for ver in 8 7 6 5 4 3 2 1 0 
+	do
+	  	if [ -f .old.${1}.${ver} ] 
+		then
+			mv -f .old.${1}.${ver} .old.${1}.$[$ver+1]
+		fi
+	done
+	cp -a ${1} .old.${1}.0
+
+fi

@@ -1,0 +1,5 @@
+(	cd ~/DOCS/REFS
+	xterm -geometry 80x52-0+0 -fn fixed -aw -rw &)
+
+(	cd ~/Reprints/incoming
+	xterm -geometry 80x52+0+0 -fn fixed -aw -rw &)

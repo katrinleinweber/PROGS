@@ -1,0 +1,13 @@
+
+gawk --source='
+	/^%/{next}
+	/\\ref{/{plod=gensub("^.*(\\\\ref{[^}]*}).*$","\\1","1",$0); 
+		print plod}
+	/\\label{/{
+	 	poodle=gensub("^.*(\\\\label{[^}]*}).*$","\\1","1",$0); 
+	 	print poodle}
+	 ' ${1:?} 
+
+
+
+

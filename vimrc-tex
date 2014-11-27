@@ -1,0 +1,19 @@
+:syn on
+:map <F7> gqap
+:se foldmethod=marker
+:se tw=0 nowrap
+":hi clear matchparen
+
+:map =ct i\citet{}i
+:map =cp i\citep{}i
+:map =cx i\citetext{}i
+
+:map =it i\begin{itemize*}%{{{\item \end{itemize*}%}}}k$
+:map =de i\begin{description*}%{{{\item \end{description*}%}}}k$
+:map =en i\begin{enumerate*}%{{{\item \end{enumerate*}%}}}k$
+:map =ve i\verb==
+:map =VE i\begin{verbatim}\end{verbatim}k
+:map =fi i\begin{center}\includegraphics[width=2.5in]{figures/}\end{center} 2k$
+
+
+

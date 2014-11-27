@@ -1,0 +1,70 @@
+#! /bin/bash
+
+# create a new LaTeX document from template 
+
+
+NEWDOC=${1:-newdoc.tex}
+
+if [ -e $NEWDOC ]; then 
+	echo \`\`$NEWDOC\'\' already exists. Doing nothing.
+	exit 10
+fi
+
+cat << ENDIN > $NEWDOC && echo \`\`$NEWDOC\'\' created.
+%% A very basic document template: 1 inch margins all round, no packages
+%%
+%% $Revision: 1.6 $
+%% $Date: 2013-03-26 05:22:51 $
+%% $Id: newdoc,v 1.6 2013-03-26 05:22:51 duncombe Exp $
+%% 
+\documentclass[letterpaper,12pt,oneside]{article}
+\batchmode
+
+% define the page to have 1 inch margins all round 
+% \setlength{\oddsidemargin}{0pt}
+% \setlength{\textwidth}{6.5in}
+% \setlength{\topmargin}{0in}
+% \setlength{\headsep}{0in}
+% \setlength{\headheight}{0in}
+% \setlength{\textheight}{9in}
+
+
+%%%%%%%%%%%%%%%%%%
+% include packages
+%%%%%%%%%%%%%%%%%%
+\usepackage[letterpaper,left=1.0in,right=1.0in,top=1.0in,bottom=1.0in]{geometry}
+\usepackage{url}
+
+% some potentially useful packs
+% \usepackage{graphicx}
+
+%%%%%%%%%%%%%%%%%%%%%%
+% for the bibliography 
+%%%%%%%%%%%%%%%%%%%%%%
+%% Use one of natbib or apalike (or another)
+% \usepackage[square]{natbib} 
+% \usepackage[square]{apalike} 
+%% set a new line for the references section 
+% \newcommand{\refheading}{Bibliography}
+% \AtBeginDocument{\renewcommand\refname{\large \refheading}}
+%% then define one of 
+% \bibliographystyle{ametsoc}
+% \bibliographystyle{/usr/share/texmf/bibtex/bst/natbib/plainnat.bst}
+% \bibliographystyle{/usr/share/texmf/bibtex/bst/natbib/unsrtnat.bst}
+% \bibliographystyle{unsrtnat}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% beginning of the document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagestyle{empty}
+
+\begin{document}
+
+% \bibliography{./abs,./cmdrrefs}
+
+\end{document}
+
+ENDIN
+
+
+

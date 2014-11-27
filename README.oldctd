@@ -1,0 +1,13 @@
+Processing of CTD Data
+
+1.  Create ASCII file @ every depth interval using CTDPOST
+
+2. Edit *.HDR ( Header) files and correct date time (GMT) and LAT and LONG
+
+3. Edit ASCII files to remove any spikes in the data.
+
+4. Use program "gawk.exe" to average data to 1m intervals
+
+	gawk -f asc2prs.awk FILENAME.ASC
+
+This will create an averaged PRS2 file that displays data in 1m intervals.

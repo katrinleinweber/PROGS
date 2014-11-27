@@ -1,0 +1,238 @@
+#!/bin/bash
+# 
+# USAGE: vertsect <options> <s87filenames>
+#
+# convert the s87 data files to table 
+# pass thru project to cut out the data along the transect we need
+# blockmean the stations, build a grid file
+
+TitleStr=${TitleStr:-"Not Named"}
+# Skip=${Skip:-$Skip}
+Skip=${Skip:-0}
+# echo "Skip is $Skip" 1>&2
+BadSalt=${BadSalt:-0}
+BadOxyg=${BadOxyg:-0}
+BadTemp=${BadTemp:-0}
+CleanUp=1
+
+if [ $# = 0 ]
+then 
+cat << END
+
+USAGE: vertsect <options> <s87filenames>
+
+Plots a vertical section of a line of stations
+
+Plot definition
+        -V<l/r/b/t>     Vertical section range
+        -R<w/e/s/n>     map Range
+	-J<n/r>		reverse the direction of the x-axis
+
+Line definition
+	-C<lon/lat>	line Centre
+        -A<angle>	line Angle
+        -L<length>	line Length
+        -E<lon/lat>     line End
+        -W<from/to>      line Width
+        -G<xgrid/ygrid> Grid size
+
+Miscellaneous
+	--nocolor	monochrome
+	--bad[salt|temp|oxyg]	do not plot the bad section
+	--nocleanup	do not delete temporary files
+
+END
+exit 1
+fi
+
+GridSize=5/1
+VertRange=40/250/0/1000 
+MapRange=17.5/18.5/-33.5/-32
+
+TempRange=${TempRange:-"4/24"}
+SaltRange=${SaltRange:-"34.5/35.7"}
+OxyRange=${OxyRange:-"2/8"}
+
+
+TempScale="-H190/380 -B190/1/1 -F380/1/1 -F0/0/1 -B0/0/1"
+SaltScale="-H120/0 -B0/1/1 -F0/0/1"
+OxyScale="-H300/0 -B300/1/1 -F0/1/1  -F0/0/1 -B0/0/1"
+Proj="15c/-5.5c"
+Label=8
+
+# Within=-2/2
+Section=10a50/50a100
+
+while [ $# -gt 0 ] 
+do 
+case $1 in 
+        -G*)    GridSize=${1#-?} ;;
+        -V*)    VertRange=${1#-?} ;;
+        -R*)    MapRange=${1#-?} ;;
+        -A*)    Angle=${1#-?} ;;
+        -E*)    End=-E${1#-?} ;;
+        -C*)    Center=-C${1#-?} ;;
+        -L*)    Length=-L${1#-?} ;;
+        -W*)    Within=-W${1#-?} ;;
+	-Jr)	Proj=-$Proj 
+		Label=2;;
+	--nocolor)
+		TempScale="-H0 -S0 -V0.2/1 -F0/0/1 -B0/0/0" 
+		SaltScale="-H0 -S0 -V0.2/1 -F0/0/1 -B0/0/0" 
+		OxyScale="-H0 -S0 -V0.2/1 -F0/0/1 -B0/0/0";;
+	--badsalt)
+		BadSalt=1;;
+	--badoxyg)
+		BadOxyg=1;;
+	--badtemp)
+		BadTemp=1;;
+	--nocleanup)
+		CleanUp=0;;
+        [^-]*)  FileNames=$@ ; shift $# ;;
+esac
+test $# -gt 0 && shift
+done
+
+datafile=`uniqfile`
+bathyfile=`uniqfile`
+clipfile=`uniqfile`
+cptfile=`uniqfile`
+grdfile=`uniqfile`
+
+# echo $datafile 1>&2
+
+LineDef="$Center $End $Length $Angle"
+
+# echo $LineDef
+
+gmtset						\
+	ANOT_FONT		Helvetica	\
+	ANOT_FONT_SIZE		12p		\
+	BASEMAP_TYPE		plain		\
+	COLOR_MODEL		hsv		\
+	HEADER_FONT		Helvetica	\
+	HEADER_FONT_SIZE	20p		\
+	LABEL_FONT		Helvetica	\
+	LABEL_FONT_SIZE		14p		\
+	MEASURE_UNIT		inch		\
+	PAPER_MEDIA		a3+		\
+	PAGE_ORIENTATION	portrait	\
+	WANT_EURO_FONT		TRUE		\
+
+
+gawk -f s872table.awk $FileNames | \
+	awk '/-999*/{gsub(//,"NaN")}{print $1,$2,$3,$4,$5,$6}' | \
+        project -Fxypqrsz $Within $LineDef -Q -: > $datafile
+# Get the bathymetry
+# Real bathymetry from etopo5
+# project -Frs -Q -G5 $LineDef | grdtrack -G/usr/local/data/etopo5/etopo5.grd | gawk '{print $3,-$4}' > $bathyfile
+
+gawk 'NR==1{lat=$1;lon=$2}lat!=$1||lon!=$2{print max;lat=$1;lon=$2}{max=$0}END{print max}' $datafile | gawk '{print $3,$7+5}' | sort -n > $bathyfile
+
+# gawk 'BEGIN{m=0;print 0,0}
+#	{print $1,$2;if ($1>m){m=$1}}
+#	END{print m,0,"\n",0,0}' $bathyfile > $clipfile
+gawk 'BEGIN{m=0;}
+	NR==1{print $1,0; a=$1}
+	{print $1,$2;if ($1>m){m=$1}}
+	END{print m,0,"\n",a,0}' $bathyfile > $clipfile
+
+###############
+# vertical profile Oxygen
+DataCol=10
+DataRange=$OxyRange
+DataScale=$OxyScale
+if [  $Skip = 0 -a $BadOxyg = 0 ]; then
+gawk "{print \$3,\$7,\$$DataCol}" $datafile | \
+	blockmean -I$GridSize -R$VertRange | \
+	surface -I$GridSize -R$VertRange -G$grdfile
+fi
+linearcpt  -N20 -C$DataRange $DataScale > $cptfile
+psclip $clipfile -R -JX$Proj -K				-Y2c
+if [  $Skip = 0 -a $BadOxyg = 0 ]; then
+	grdimage $grdfile -R -JX -C$cptfile -K -O
+	grdcontour $grdfile -R -JX -C1 -K -O -A
+fi
+psclip -C -K -O
+gawk '{print $3,$7}' $datafile | psxy -R -JX -Sp -B:"Distance (km)":${Section}WeSn -O -K
+psxy $bathyfile -R -JX -O -K 
+pstext -R0/10/0/10 -JX -K -O << END
+$Label 9.5 12 0 0 1 Oxygen
+END
+psscale -C$cptfile -D15.5c/2.75c/5.5c/0.75c -Bf1a5g1 -O -K
+
+
+###############
+# vertical profile Salt
+DataCol=9
+DataRange=$SaltRange
+DataScale=$SaltScale
+if [ $Skip = 0 -a   $BadSalt = 0 ]; then
+gawk "{print \$3,\$7,\$$DataCol}" $datafile | \
+	blockmean -I$GridSize -R$VertRange | \
+	surface -I$GridSize -R$VertRange -G$grdfile
+fi
+linearcpt  -N20 -C$DataRange $DataScale > $cptfile
+psclip $clipfile -R -JX$Proj -K -O				-Y6c
+if [ $Skip = 0 -a $BadSalt = 0 ]; then
+	grdimage $grdfile -R -JX -C$cptfile -K  -O
+	grdcontour $grdfile -R -JX -C0.1 -K  -O -A
+fi
+psclip -C -K -O
+gawk '{print $3,$7}' $datafile | psxy -R -JX -Sp -B${Section}:"Pressure (dbar)":Wesn -O -K
+psxy $bathyfile -R -JX -O -K 
+pstext -R0/10/0/10 -JX -K -O << END
+$Label 9.5 12 0 0 1 Salinity
+END
+psscale -C$cptfile -D15.5c/2.75c/5.5c/0.75c -Bf0.1a0.5g0.1 -O -K
+
+
+###############
+# vertical profile Temp
+DataCol=8
+DataRange=$TempRange
+DataScale=$TempScale
+if [  $Skip = 0 -a $BadTemp = 0 ]; then
+gawk "{print \$3, \$7, \$$DataCol}" $datafile | \
+	blockmean -I$GridSize -R$VertRange | \
+	surface -I$GridSize -R$VertRange -G$grdfile
+fi
+linearcpt  -N20 -C$DataRange $DataScale > $cptfile
+psclip $clipfile -R -JX$Proj -K -O 				-Y6c
+if [  $Skip = 0 -a $BadTemp = 0 ]; then
+	grdimage $grdfile -R -JX -C$cptfile -K -O
+	grdcontour $grdfile -R -JX -C1 -K -O -A5
+fi
+psclip -C -K -O
+gawk '{print $3,$7}' $datafile | psxy -R -JX -Sp -B${Section}WesN -O -K
+psxy $bathyfile -R -JX -O -K 
+pstext -R0/10/0/10 -JX -K -O << END
+$Label 9.5 12 0 0 1 Temperature
+END
+psscale -C$cptfile -D15.5c/2.75c/5.5c/0.75c -Bf1a5g1 -O -K
+
+
+
+###############
+# station distribution
+
+MapFrame=`echo $MapRange | gawk -f axis.awk`
+pscoast -Di -JM5.3c -R$MapRange -G150 -O -K			-X18c -Y-12c
+# project -Frs $LineDef -Q -G5 | grdtrack -G/usr/local/data/etopo5/etopo5.grd | psxy -R -JM -W10 -O -K
+ 
+head -1q $FileNames | awk '{print $5,$4}' | psxy -R -JM -Sc0.03 -G0 -O -K
+
+# /home/duncombe/DATA/COAST/formatcoastpts.awk ~/DATA/COAST/coastpts.txt | gawk '{printf "%g %g 8 0 1 LM %s\n",$2,$1,$3 " " $4 }' | pstext -R -JM -O -K
+
+gawk '{print $1,$2}' $datafile | sort | uniq | psxy -R -JM -Sc0.05 -B$MapFrame:."$TitleStr":wESn -G255/0/0 -O 
+# psxy -R -JM -Sc0.1 -G0/255/0 -O
+
+##############
+# clean up the mess
+
+if [ $CleanUp = 1 ]; then
+	rm $bathyfile $clipfile $cptfile $grdfile $datafile
+fi
+
+# cat << TESTING > /dev/null
+

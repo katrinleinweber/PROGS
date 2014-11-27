@@ -1,0 +1,6 @@
+#!/bin/zsh
+case ${0:t} in
+"dec2hex") echo $1 | awk 'BEGIN{FS="."}{printf "%d.%d.%d.%d\t%x.%x.%x.%x\n",$1,$2,$3,$4,$1,$2,$3,$4}';;
+"hex2dec") echo -n $1 ; echo "Not implemented yet";;
+*) echo "dec2hex \| hex2dec www.xxx.yyy.zzz"; echo "conversion of ip numbers decimal to hex";;
+esac

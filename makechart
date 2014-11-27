@@ -1,0 +1,127 @@
+#!/bin/zsh
+
+# DIR=${1:-/LAN/ships/WORKING/ALGOA/ALG067}
+
+# the directory name from the command line, with any trailing / removed
+DIR=`echo ${1:-/LAN/ships/WORKING/ALGOA/ALG067}| sed 's-/$--'`
+
+# if there is a second argument old scripts must be used
+SCRIPT=${2:-new}
+
+# a flag for testing
+oktocreate=true
+if ! $ok2create ; then 
+	echo Not creating postscript
+fi
+
+if [ -e $DIR/DDS/HOURLOGS ]; then
+	SUBDIR=DDS/HOURLOGS
+	STNDIR=DDS/STNREF/STATION.INF
+	EXTN=H
+	DS_TYPE=DDS
+elif [ -e $DIR/dds/hourlogs ]; then
+	SUBDIR=dds/hourlogs
+	STNDIR=dds/stnref/station.inf
+	EXTN=h
+	DS_TYPE=DDS
+elif [ -e $DIR/nds/daylogs ]; then
+	SUBDIR=nds/daylogs
+	STNDIR=nds/stations.csv
+	EXTN=txt
+	DS_TYPE=NDS
+elif [ -e $DIR/NDS/daylogs ]; then
+	SUBDIR=NDS/daylogs
+	STNDIR=NDS/Stations.csv
+	EXTN=txt
+	DS_TYPE=NDS
+elif [ -e $DIR/NDS/DAYLOGS ]; then
+	SUBDIR=NDS/DAYLOGS
+	STNDIR=NDS/Stations.csv
+	EXTN=txt
+	DS_TYPE=NDS
+else
+	echo Sub-directory structure for $DIR not found
+	exit 1
+fi
+
+CRUISE=$DIR:t:u
+VESSEL=$DIR:h:t:u
+NUMBER=`echo $CRUISE | gawk '{gsub(/[[:alpha:]]/,""); print}'`
+
+
+SCRIPTFILE=$CRUISE.s
+TRACKFILE=$CRUISE.dat
+CHART=$CRUISE.ps
+STNFILE=$CRUISE.stn
+CTDFILE=$CRUISE.ctd
+CNTFILE=$CRUISE.cnt
+TXTFILE=$CRUISE.txt
+
+if [ ! -s "$TRACKFILE" ]; then
+	case $DS_TYPE in 
+	DDS) gawk -f ddsparse.awk -f mathlib.awk	\
+		Longitude,Latitude,Date,Time $DIR/$SUBDIR/*/*.${EXTN}?? \
+		| uniq -w 17 > $TRACKFILE
+		;;
+	NDS) gawk -f ndsparse.awk -f mathlib.awk	\
+		Longitude,Latitude,Date,Time $DIR/$SUBDIR/*.${EXTN} 	\
+		| uniq -w 17 > $TRACKFILE
+		;;
+	esac
+fi
+if [ ! -s "$STNFILE" ]; then
+	case $DS_TYPE in 
+	DDS) gawk -f stnparse.awk -f mathlib.awk $DIR/$STNDIR 	\
+		| awk 'BEGIN{FS="\t"}{print $2,$1,$5,$3,$7}' > $STNFILE
+	     gawk -f stnpars1.awk -f mathlib.awk $DIR/$STNDIR 	\
+		| awk 'BEGIN{FS="\t"}/CTDS/{print $2,$1,$5,$3}' > $CTDFILE
+		;;
+	NDS) gawk -f csvstn.awk -f mathlib.awk $DIR/$STNDIR 	\
+		| awk 'BEGIN{FS="\t"}{print $2,$1,$5,$3,$7}' > $STNFILE
+	     gawk -f csvstn1.awk -f mathlib.awk $DIR/$STNDIR 	\
+		| awk 'BEGIN{FS="\t"}/CTDS/{print $2,$1,$5,$3}' > $CTDFILE
+		;;
+	esac
+fi
+
+if [ ! -s "$CNTFILE" ]; then
+	echo 1000 c > $CNTFILE
+fi
+
+DATE=`awk 'NR==1{printf "%s ",$3}END{printf "to %s\n",$3}' $TRACKFILE 	\
+	| sed "s=/=-=g"`
+
+TITLE="$VESSEL $NUMBER ($DATE)"
+
+echo $TITLE | tee $TXTFILE
+awk 'NR==1{printf "%s ",$4}END{printf "to %s\n",$4}' $STNFILE | tee -a $TXTFILE
+
+RANGE=`minmax -I5/2 $TRACKFILE`
+BORDER=`echo $RANGE | gawk -v PROJ=g -f axis.awk`
+
+if [ "$SCRIPT" = "new" -o ! -e $SCRIPTFILE ]; then
+cat << ENDSCRIPT > $SCRIPTFILE
+gmtset	BASEMAP_TYPE plain	\
+	HEADER_FONT_SIZE 18	\
+	MEASURE_UNIT inch	\
+	LABEL_FONT_SIZE 14p	\
+	DEGREE_FORMAT 3
+
+pscoast $RANGE -P -JM13c -Di -W -X4c -K -A0/1/1
+if [ -s "$STNFILE" ]; then psxy $STNFILE -R -JM -Sc0.1 -W/0/0/255 -K -O ; fi
+if [ -s "$CTDFILE" ]; then psxy $CTDFILE -R -JM -Sa0.2 -W/0/0/255 -K -O ; fi
+if [ -s "$TOPO" ]; then grdcontour $TOPO -R -JM -C$CNTFILE -W -K -O ; fi
+psxy $TRACKFILE -R -JM -Sp -W/255/0/0 -B${BORDER}:."$TITLE": -O
+ENDSCRIPT
+fi
+
+# output some stats
+echo `wc -l $STNFILE | awk '{print $1}'` stations | tee -a $TXTFILE
+echo `wc -l $CTDFILE | awk '{print $1}'` ctds | tee -a $TXTFILE
+
+if $oktocreate ; then
+sh $SCRIPTFILE > $CHART
+fi
+
+gv -portrait $CHART &
+

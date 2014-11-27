@@ -1,0 +1,12 @@
+#!/bin/sh
+# 
+# mails a message in $1 with the subject in $2 to the address in $3
+if [ ${#@} -ge 3 ]; then
+	mess="$1"
+	subj="$2"
+	shift 2
+	echo "$mess" | /bin/mail -s "$subj" $@
+else
+	echo "Bad call on mailmessage"
+	exit 1
+fi

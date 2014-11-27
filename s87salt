@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# calculate salinity from conductivity for s87 files
+
+echo STOP! This script needs debugging.
+echo Be sure you know what you are doing and 
+echo understand what it does before you use it. 
+exit 1
+
+gawk -f mathlib.awk -f sealib.awk --source '
+BEGIN{
+# initialize a marker
+	data=0
+# Set up some information
+	OFS="\t"
+	TimeStr=strftime("%Y-%m-%d %H:%M");
+	}
+
+FNR==1{Lati=$4}
+data==0&&!/^@/{print}
+/^@/{
+	data=1;
+	sub("^@","");
+	cols=split($0,param);
+	for (i=1;i<=cols;i++){column[toupper(param[i])]=i};
+
+	if (	column["SA"]==0 && column["CO"]!=0 && \
+		column["TE"]!=0 && column["PR"]!=0 ){
+		print "# " TimeStr ": sw_salt: Calculate salinity"
+		cols++;
+		param[cols]="SA";
+		column[param[cols]]=cols;
+		$0=$0 "\tSA"
+		} else {
+		print "# " TimeStr ": sw_salt: Recalculate salinity"
+		# cols++;
+		# param[cols]="DS";
+		# column[param[cols]]=cols;
+		# $0=$0 "\tDS"
+		}
+	print "@" toupper($0)
+	getline
+}
+data && !/^[[:blank:]]*$/{  
+	# SA0=$column["SA"];
+	if ($column["CO"]>-9 && $column["TE"]>-9 && $column["PR"]>-9 ){
+	$column["SA"]=sw_salt($column["CO"]/sw_c3515(),$column["TE"],$column["PR"]);
+	} else { $column["SA"]=-9 }
+
+	# $column["DS"]=SA0-$column["SA"];
+	for (i=1;i<cols;i++){printf "%g\t",$column[toupper(param[i])]};
+	printf "%g\n",$column[toupper(param[i])];
+	}
+	
+' $@
+

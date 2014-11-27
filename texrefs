@@ -1,0 +1,7 @@
+
+# find references and labels in a tex document
+
+echo -e "\n=======\nREFERENCES\n-------\n"
+grep "\\ref\>" $1 | sed -n 's/.*\\ref{\([^}]\+\)}.*/\1/gp' |  sort -b -u
+echo -e "\n=======\nLABELS\n-------\n"
+grep "\\label\>" $1 | sed -n 's/.*\\label{\([^}]\+\)}.*/\1/gp' |  sort -b -u

@@ -1,0 +1,14 @@
+#! /bin/bash
+# displays multiple files using gv 
+
+OPTIONS=""
+
+while [ "$1" ]; do
+	if [ ${1:0:1} = - ]; then 
+		OPTIONS="$OPTIONS $1"
+	else
+		gv $OPTIONS $1 &
+	fi
+	shift
+done
+

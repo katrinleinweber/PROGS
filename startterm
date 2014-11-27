@@ -1,0 +1,2 @@
+#! /bin/sh
+/usr/X11R6/bin/xterm -sl 2048 -sb $@ &

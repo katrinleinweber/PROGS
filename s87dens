@@ -1,0 +1,2 @@
+#!/bin/sh
+gawk -f mathlib.awk -f sealib.awk -f s87dens.awk 

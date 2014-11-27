@@ -1,0 +1,16 @@
+#! /bin/sh
+HOST=`uname -a | cut -f2 -d\  `
+PRIMEID=`ps -ax|grep mprime |grep -v grep|awk '{print $1}'`
+SPLFILE=`ls ~mersenne/*.spl 2> /dev/null`
+if [ "$PRIMEID" != "" ]
+then
+	echo "mprime is running on $HOST"
+else
+	echo "mprime is not running on $HOST"
+fi
+if [ "$SPLFILE" != "" ]
+then
+	echo "mprime on $HOST needs to contact the server!"
+fi
+
+

@@ -1,0 +1,63 @@
+#!/bin/sh
+# creates a unique filename based on the temp???????$$$ template
+#
+
+TYPE=f
+ACTION="/bin/touch"
+BASE=`date +%j%H%M`
+EXT=".tmp"
+SEP=""
+
+while [ $# -gt 0 ] 
+do 
+case $1 in 
+	-d*)	TYPE=d
+		ACTION="/bin/mkdir" 
+		shift 1
+		;;
+	-f*)	TYPE=f
+		ACTION="/bin/touch"
+		shift 1
+		;;
+	-l*)	TYPE=temp
+		BASE=`date +%Y%j%H%M%S`
+		EXT=""
+		SEP="."
+		FORM=done
+		shift 1
+		;;
+	-s*)	BASE=`date +%j%H%M`
+		FORM=done
+		SEP=""
+		EXT=".tmp"
+		shift 1
+		;;
+	-e)	EXT=$2
+		SEP=""
+		shift 2
+		;;
+	[^-]*)	BASE=$1
+		FORM=done
+		EXT=""
+		SEP=""
+		shift $#
+		;;
+esac
+done
+
+# BASE=temp`date +%Y%j%H%M%S`
+# short version
+
+FIL=${TYPE}${BASE}${SEP}${EXT}
+
+while [ -e $FIL ]
+do
+	# EXT=`awk 'BEGIN{print '${EXT:--1}'+1}'`
+	# FIL=$BASE.$EXT
+	NUM=$(($NUM+1))
+	FIL=${TYPE}${BASE}${SEP}${NUM}${EXT}
+done
+
+$ACTION $FIL
+echo $FIL
+

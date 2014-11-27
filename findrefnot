@@ -1,0 +1,17 @@
+# Usage: findref <search string> <filename>
+# 
+#CREATED -	
+#	$Revision: 1.2 $
+#	$Date: 2011/03/25 13:28:10 $
+#	$Id: findrefnot,v 1.2 2011/03/25 13:28:10 duncombe Exp $
+#
+
+awk -v S="${1}" --source 'BEGIN{
+	RS=""
+	FS="\n"
+	ORS="\n\n"
+	OFS="\n"
+	} 
+{rec=gensub(/[{}]/,"","g")}
+toupper(rec)!~toupper(S){print $0}' ${2:--}
+

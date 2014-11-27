@@ -1,0 +1,18 @@
+
+# xbiff -geometry 100x64-0+0 &
+
+TZ='America/Los_Angeles' xclock -title "PDT/PST" -update 1   -d -geometry 220x30-0-270 &
+TZ='America/New_York' xclock -title "EDT/EST" -update 1   -d -geometry 220x30-0-210 &
+TZ='GMT' xclock -title "GMT" -update 1   -d -geometry 220x30-0-150 &
+TZ='Africa/Windhoek' xclock -title "NST" -update 1   -d -geometry 220x30-0-90 &
+TZ='Africa/Johannesburg' xclock -title "SAST" -update 1  -d -geometry 220x30-0-30 & 
+
+# TZ='America/New_York' xclock -title "EDT/EST" -update 1  -geometry 100x100-0+92 &
+# TZ='GMT' xclock -title "GMT" -update 1  -geometry 100x100-0+220 -hd red -hl red &
+# TZ='Africa/Windhoek' xclock -title "NST" -update 1  -geometry 100x100-0+348 -hd blue -hl blue &
+# TZ='Africa/Johannesburg' xclock -title "SAST" -update 1  -geometry 100x100-0+476 &
+
+# TZ='America/New_York' xclock -title "Eastern" -update 1  -geometry -0+0 &
+# TZ='GMT' xclock -title "Universal" -update 1  -geometry -0+198 &
+# TZ='Africa/Johannesburg' xclock -title "South African" -update 1  -geometry -0+396 &
+

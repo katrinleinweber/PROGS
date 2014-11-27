@@ -1,0 +1,14 @@
+ods
+sxc
+xls
+csv
+ots
+stc
+dif
+dbf
+xlt
+slk
+xlsx
+xml
+fods
+uos

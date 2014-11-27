@@ -1,0 +1,45 @@
+Calculating Salinity from Conductivity Ratio
+--------------------------------------------
+...using the routines in $HOME/PROGS
+
+salt          bash script to call salt.awk
+salt.awk      awk script using routines in sealib.awk and mathlib.awk
+sealib.awk    seawater functions library, hacked about from CSIRO 
+              matlab scripts
+mathlib.awk   provides some common functions not provided by awk internals, eg
+              absolute value and pi, amongst other things.
+
+installation:
+------------
+modify salt or set and export the environment variable AWKPATH,
+     eg export AWKPATH=$HOME/bin
+place salt in your path, eg in $HOME/bin
+place sealib.awk, mathlib.awk, salt.awk in $AWKPATH, eg $HOME/bin
+
+usage:
+-----
+prepare a data file with two columns: <identifier> <conductivity ratio>
+conductivity ratio is the readout from the Guildline Autosal, actually = 2xCR
+call salt as in the example. output is three columns:
+<identifier> <conductivity ratio> <salinity>
+
+example:
+-------
+
+Bath temperature is 21C:
+
+	salt filename.txt
+or
+	salt < filename.txt
+
+Bath temperature is 19C:
+
+	salt T=19 filename.txt
+
+
+
+
+
+
+CMDR
+2003/01/31

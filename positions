@@ -1,0 +1,10 @@
+#!/bin/bash
+
+/usr/bin/gawk -f mathlib.awk --source='
+BEGIN{ }
+
+{	printf "%f",parsepos($1);
+	for(f=2;f<=NF;f++){printf "\t%f",parsepos($f)}
+	printf "\n"
+}
+'

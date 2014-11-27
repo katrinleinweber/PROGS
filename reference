@@ -1,0 +1,322 @@
+#
+# Reference and Bibliography Scripts
+# ----------------------------------
+#
+# Use this script to access the bibliographic database and reference library.
+#
+# Scripts
+# -------
+#    reference - print out a reference from the bibliography
+#    findref - search the bibliography for a string
+#    readref - find the filename of a reference and open a reader
+#
+# script: reference
+#
+# Synopsis
+# --------
+# 
+# reference [options] <search terms>
+#
+# where options are:  form of output 
+# 			-bib -- bibfile entry
+#                       -bbl -- bbl file formatted entry
+#                       -asc -- ascii output (LaTeX tags removed) 
+#                     style of output
+#                       -bst=<bibliographystyle> 
+# 				bibliographic style file to use
+# 				     ams (ametsoc)
+# 				     agu (agufull08)
+# 				     or any other available style file
+# 		      other
+#                       -kee -- keep the directory, do not delete it. Use 
+# 			this if access is required to the output files for
+# 			debugging or to collect a large number of bbl entries. 
+# 
+# The options -bib, -bbl, -asc may be set in environment variable
+# REFERENCETYPE (eg. export REFERENCETYPE=bbl); the style file can be
+# specified in the environment variable STYLEBST (eg. export
+# STYLEBST=agufull08).  
+# 
+# Description
+# -----------
+# 
+# creates a temporary directory in /tmp, copies blank working
+# files, extracts the reference(s) from the bib file, formats
+# them as desired, prints them and then deletes the temporary
+# directory.  
+# 
+# Requires
+# --------
+# (the barebones file is now created by this script, not by a template file)
+# $REFSDIR                  where the bibfile lives
+# $REFSFILE                 the name of the bibfile 
+# $REFSDIR/findref          search bibfile for a string
+#    findref belongs in $PROGS
+# $REFSPROGS/cleanbbl.awk   remove latex markup for ascii out
+# 
+# 
+# Creates 
+# -------
+# $TMPDIR
+# $TMPDIR/found.bib
+# $TMPDIR/barebones.{log,dvi,blg,bbl,aux}
+# 
+# Environment
+# -----------
+# $REFSDIR (default $HOME/DOCS/REFS)
+# $REFSFILE (default cmdrrefs.bib)
+# 
+# also 
+# $REFSPROGS (default $HOME/PROGS)
+# $REFSTEXFILE (default barebones)
+#
+# What about using $BIBINPUTS and $BSTINPUTS ?
+# 
+# CREATED -	earliest version seen: 2003?
+#	$Revision: 1.24 $
+#	$Date: 2011/03/02 00:07:23 $
+#	$Id: reference,v 1.24 2011/03/02 00:07:23 duncombe Exp $
+#
+# CHANGELOG
+#    2010/09/22 CMDR
+#	Make the default to display the file (FILE=file)
+#	Add options to turn off settings (eg nofile)
+#    2011-02-12 
+# 	Allow to set some defaults using environment variables set in the shell 
+ 
+# Change these to what your default setup is. To change temporarily, set
+# environment variables in the shell before calling the script
+REFSPROGS=${REFSPROGS:-$HOME/PROGS}
+REFSDIR=${REFSDIR:-$HOME/DOCS/REFS}
+REFSFILE=${REFSFILE:-cmdrrefs.bib}
+REFSTEXFILE=${REFSTEXFILE:-barebones}
+
+# default output
+OUTP=${REFERENCETYPE:-asc}
+KEEP=nokeep
+FILE=file
+JOUR=${STYLEBST:-agufull08}
+
+function helpmessage(){
+cat << ENDIN
+Usage: $0 [options] <searchterms> 
+ Options 
+ ------- 
+      -help   print this message 
+      -bib    print the BibTeX entry in full 
+      -bbl    print the bbl file output
+      -asc    print  an ASCII bibliography entry
+      -keep   do not erase the temporary work space (found in /tmp)
+      -file   if the bib entry has a FILE field provide it in the 
+              bibliography output (works only with -asc)
+      -bst=<bibliographystylefile>
+              use the named bibliography style file (.bst)
+      -agu    equivalent to -bst=agufull08
+      -ams    equivalent to -bst=ametsoc
+
+ Environment variables
+ ---------------------
+      REFERENCETYPE (bib|bbl|[asc])
+      STYLEBST ([agufull08]|ametsoc (or any style file))
+      REFSDIR ([~/DOCS/REFS])
+      REFSFILE ([cmdrrefs.bib])
+
+ENDIN
+}
+
+if [ $# -eq 0 ]; then 
+	helpmessage
+	exit 1
+fi
+
+# for the case statement, would like to have the extended globs
+shopt -s extglob
+
+while ( echo $1 | grep "^-" > /dev/null ); do
+	case $1 in
+	-h|-?(-)help* )
+		helpmessage
+		exit
+		;;
+# Output format options
+	-?(-)bib* )	OUTP=bib
+		shift
+		;;
+	-?(-)bbl* )	OUTP=bbl
+		shift
+		;;
+	-?(-)asc* )	OUTP=asc
+		shift
+		;;
+# Journal style options
+	-?(-)agu )  JOUR=agufull08
+		shift
+		;;
+	-?(-)ams )  JOUR=ametsoc
+		shift
+		;;
+	-?(-)bst* ) JOUR=${1#-bst=}
+		shift
+		;;
+# Output content options
+	-?(-)fil* ) FILE=file
+		shift
+		;;
+	-?(-)nofil* ) FILE=nofile
+		shift
+		;;
+# Temporary file disposal options
+	-?(-)kee* ) KEEP=keep
+		shift
+		;;
+	-?(-)nokee* ) KEEP=nokeep
+		shift
+		;;
+
+	-* )	echo Option not recognised $1
+	     	exit 2
+		;;
+	esac
+done
+
+# after the options are processed, what remains should be search
+# terms
+SEARCH=${1:?What am I looking for?} 
+
+# See comments below. Should be able to avoid this limitation.
+# if [ $# -gt 10 ]; then echo Limit of arguments to filter is 9. ; fi;
+
+export TMPDIR=`mktemp -t -d` 
+TMPFILE=`mktemp -t`
+# echo $TMPFILE
+REFSBIBFILE=$TMPDIR/found.bib
+
+# there should be a blank tex document that provides a nocite{*}
+# that creates a bbl file for the references we find. This is
+# to be found in the $PROGS directory.
+
+# why doesn't this use shift and search? Do not have to pipe
+# through multiple finds. Sometime try to while and shift writing
+# the result to a temporary file, then move it to REFSBIBFILE. Any
+# number of terms will work then. Overhead? 
+
+${REFSPROGS}/findref $1 ${REFSDIR}/${REFSFILE} > ${REFSBIBFILE}; shift; 
+while [ $# -gt 0 ]; do 
+	${REFSPROGS}/findref $1 ${REFSBIBFILE} > ${TMPFILE} ; shift ; 
+	mv ${TMPFILE} ${REFSBIBFILE}
+done
+
+# ( cd $REFSDIR 
+# ./findref "${SEARCH}" $REFSDIR/$REFSFILE |
+# 	( [ -n "$2" ] && ./findref "$2" || cat ) |
+# 	( [ -n "$3" ] && ./findref "$3" || cat ) |
+# 	( [ -n "$4" ] && ./findref "$4" || cat ) |
+# 	( [ -n "$5" ] && ./findref "$5" || cat ) |
+# 	( [ -n "$6" ] && ./findref "$6" || cat ) |
+# 	( [ -n "$7" ] && ./findref "$7" || cat ) |
+# 	( [ -n "$8" ] && ./findref "$8" || cat ) |
+# 	( [ -n "$9" ] && ./findref "$9" || cat ) ) > $REFSBIBFILE
+# echo 
+
+pushd $TMPDIR > /dev/null
+
+if [ $OUTP = "bib" ] ; then 
+	cat $REFSBIBFILE
+else
+	# if required modify the bibfile so the filename is provided
+	# if available
+	if [ "$FILE" = "file" ]; then
+	   # modify the bibfile
+	   TMPFIL=$(mktemp)
+	   gawk ' BEGIN{ RS=""; FS="\n"; IGNORECASE=1;
+	   	# ORS="\n\n"; OFS="\n";
+	   	}
+	           {N=split($0,REC); NIND=0; FIND=0; NOTE=""; FNAME="";
+	   	for (i=1;i<=N;i++){
+	   	   if (REC[i]~/^[[:blank:]]*file/){
+	   	      FNAME=gensub(/^.*["{]([^}"]*)[}"].*$/,"\\1","g",REC[i]);
+			# this idea is to ensure the case of the filename
+			# is maintained, but its not working (cleanbbl.awk
+			# is not working right)
+			# FNAME=gensub(/([[:upper:]])/,"{\\1}","g",FNAME);
+	   	      FIND=i; }
+	   	   if (REC[i]~/^[[:blank:]]*note/){
+	   	      NOTE=gensub(/^.*["{]([^}"]*)[}"].*$/,"\\1","g",REC[i]);
+	   	      NIND=i; }
+	   	}	
+		# if the filename is required let bibtex add it by
+		# providing it as a note
+	   	if (FIND){
+	   	   if (NIND){ REC[NIND]="NOTE = {" NOTE " {" FNAME "}},"; }
+	   	   	else
+	   	   	{ REC[N]="NOTE = {{" FNAME "}},"; 
+	   	     	REC[++N]="}";
+	   	   	}
+	   	   }
+	   	for (i=1;i<=N;i++){print REC[i]}
+	   	}' $REFSBIBFILE > $TMPFIL
+	   mv $TMPFIL $REFSBIBFILE
+	fi
+	# here we plug in our desired bibliographic style as we
+	# copy the blank tex file across
+	# try creating directly without using a template file
+	# cat $REFSPROGS/$REFSTEXFILE.tex | sed '
+	cat << ENDIN | sed '
+/^[^%].*bibliographystyle/s/^/% /
+/begin{document}/i\
+\\bibliographystyle{'$JOUR'}
+' > $TMPDIR/$REFSTEXFILE.tex
+\documentclass[letterpaper,12pt,oneside]{article}
+\batchmode
+
+% define the page to have 1 inch margins all round 
+\usepackage[letterpaper,left=1in,right=1.0in,top=1.0in,bottom=1in]{geometry}
+\usepackage{url}
+\usepackage[color]{showkeys}
+\usepackage[square]{natbib} 
+% \bibliographystyle{/usr/share/texmf/bibtex/bst/natbib/unsrtnat.bst}
+% \bibliographystyle{ametsoc}
+\bibliographystyle{agufull04}
+
+\pagestyle{empty} 
+\begin{document}
+\nocite{*}
+\bibliography{abs,./found} 
+\end{document}
+ENDIN
+	# now latex the file to create the bbl file
+	( latex $REFSTEXFILE
+  	  bibtex $REFSTEXFILE
+  	  latex $REFSTEXFILE
+  	  bibtex $REFSTEXFILE
+  	  latex $REFSTEXFILE
+  	  latex $REFSTEXFILE
+	  ) > /dev/null 2>&1
+
+	# clean the bbl file of latex markup 
+	[ "$OUTP" = "asc" ] && gawk -f cleanbbl.awk $REFSTEXFILE.bbl
+	# or print out the bibitems
+	[ "$OUTP" = "bbl" ] && cat $REFSTEXFILE.bbl | awk \
+'BEGIN{nowprinting=0}
+	/^\\bibitem/{nowprinting=1}
+	/^\\end{thebibliography}/{nowprinting=0}
+	nowprinting{print} '
+
+fi 
+
+popd > /dev/null
+
+if [ "$KEEP" != "keep" ]; then 
+	rm -r $TMPDIR
+else
+	echo Results kept in $TMPDIR
+fi 
+
+# LOOKFOR=`cat $REFSBIBFILE |
+# 		awk '/FILENAME/{print $3}' |
+# 		sed -e 's/^[{"]//' -e 's/[}",]*$//'`
+# 
+# [ "$LOOKFOR" ] && locate $LOOKFOR 
+# 
+# rm $TMPFILE
+

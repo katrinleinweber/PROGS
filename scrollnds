@@ -1,0 +1,16 @@
+# DATAFILE=/mnt/NDS1/AFR166/DAYLOGS/20020318.txt
+
+DATAFILE=`find ${1:-/africana/NDS1} -iname "*.txt" -mmin -2 -print`
+
+if [ "$1" ] ; then
+	MAND="cat "
+else
+	MAND="tail -n 1000 -f "
+fi
+$MAND $DATAFILE | gawk -v PRINT_HEADER=1 -v POS_FORMAT="M" -f ndsparse.awk -f mathlib.awk \
+  Station,Date,Time,Latitude,Longitude,SeaTemp,Salinity,Speed,Heading,HydWO,BioWO,MPWO,WndSpdTK,WindDirT,Sounding
+
+
+
+#  Date,Time,Station,Gridno,Latitude,Longitude,SeaTemp,Salinity,Speed,Heading,HydroWO,BioWO,MPWO,WindSpeedTK,WindDirT,Sounding
+# gawk 'BEGIN{FS="\t"}{printf "%10s %10s %10s %10s %8.4f %9.4f %6.3f %4.1f %05.1f %4.1f %4.1f\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11;fflush()}'

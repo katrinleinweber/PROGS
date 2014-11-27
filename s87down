@@ -1,0 +1,37 @@
+#!/bin/sh
+# removes upcast data and pressure/depth reversals 
+
+AWKPATH=${AWKPATH:?Set and export AWKPATH environment variable}
+gawk -f mathlib.awk -f sealib.awk --source '
+BEGIN{
+# initialize a marker
+# Set up some defaults
+	OFS="\t"
+	TimeStr=strftime("%Y-%m-%d %H:%M");
+	}
+FNR==1{	Lati=$4
+	maxdepth=-99999
+	data=0
+	}
+data==0&&!/^@/{print}
+/^@/{
+	data=1;
+	sub("^@","");
+	cols=split($0,param);
+	for (i=1;i<=cols;i++){column[toupper(param[i])]=i};
+
+	if (column["PR"]!=0){ checkvar=column["PR"]; } else {
+		if (column["DE"]!=0){ checkvar=column["DE"];}
+		}
+	print "@" $0
+	getline
+	}
+
+data && !/^[[:blank:]]*$/{  
+	if ($checkvar>=maxdepth){
+		print
+		maxdepth=$checkvar
+		}
+}
+	
+' $@

@@ -1,0 +1,63 @@
+#! /bin/sh
+#
+# Constructs a cpt file with linear transform from data to hue/greyscale. 
+# Any ranges of HSV can be specified. B and F specify the shade assigned 
+# to data below and above start and end respectively.
+# 
+# linearcpt [-Nn] [-Cstart[/end]] [-Hhue[/hue]] [-Ssat[/sat]] [-Vval[/val]] [-Bh/s/v] [-Fh/s/v]
+# default:   -N10  -C0/100  -H180/180  -S1/1  -V1/1 -B0/0/0 -F0/0/1
+# 
+
+JUNE=`for par in $@ 
+do  
+	case $par in 
+	-N*) echo -n -v N=${par#-N}\ ;;
+	-C*) echo -n -v C=${par#-C}\ ;;
+	-H*) echo -n -v H=${par#-H}\ ;;
+	-S*) echo -n -v S=${par#-S}\ ;;
+	-V*) echo -n -v V=${par#-V}\ ;;
+	-F*) echo -n -v F=${par#-F}\ ;;
+	-B*) echo -n -v B=${par#-B}\ ;;
+	esac
+done `
+
+#echo $JUNE
+
+/usr/bin/gawk $JUNE \
+'BEGIN{	OFS="\t"; \
+# number of intervals \
+	if (length(N)==0){N=10}; \
+# data intervals \
+	if (length(C)==0){C="0/100"}; \
+	n=split(C,c,"/"); if (n==1){c[2]=c[1]}; dc=(c[2]-c[1])/N; \
+# hue \
+	if (length(H)==0){H="180/180"}; \
+	n=split(H,h,"/"); if (n==1){h[2]=h[1]}; dh=(h[2]-h[1])/N; \
+# saturation \
+	if (length(S)==0){S="1/1"}; \
+	n=split(S,s,"/"); if (n==1){s[2]=s[1]}; ds=(s[2]-s[1])/N; \
+# value \
+	if (length(V)==0){V="1/1"}; \
+	n=split(V,v,"/"); if (n==1){v[2]=v[1]}; dv=(v[2]-v[1])/N; \
+# below \
+	if (length(B)==0){B="0/0/0"}; \
+	n=split(B,b,"/"); if (n==1){b[2]=0;b[3]=b[1]/255;b[1]=0}; \
+# full-scale \
+	if (length(F)==0){F="0/0/1"}; \
+	n=split(F,f,"/"); if (n==1){f[2]=0;f[3]=f[1]/255;f[1]=0}; \
+# print out header \
+	print "#\n#  cpt file created by linearcpt on " strftime() "\n#"; \
+# print out data table \
+	for (i=1;i<=N;i++){ \
+		print c[1],h[1],s[1],v[1],c[1]+=dc,h[1]+=dh,s[1]+=ds,v[1]+=dv; \
+	} \
+# print out below and fullscale \
+	print "B",b[1],b[2],b[3]; \
+	print "F",f[1],f[2],f[3]; \
+}' | /usr/bin/gawk '!/^#/&&!/^B/&&!/^F/{while ($2<0){$2+=360}; \
+			while ($6<0){$6+=360}; \
+			while ($2>360){$2-=360}; \
+			while ($6>360){$6-=360};} \
+			{print}' FS="\t" OFS="\t"
+
+

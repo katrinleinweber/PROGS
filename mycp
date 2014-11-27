@@ -1,0 +1,9 @@
+#!/bin/bash
+# 
+
+echo $#
+if [ -e $$# ]; then
+	echo exists
+else
+	echo not exist
+fi

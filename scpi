@@ -1,0 +1,30 @@
+#! /bin/bash
+# secure copy (scp) with check for existence of the file on the other side
+
+
+# find out the remote name
+DARGS=($@)
+DEST=${DARGS[$#-1]}
+# echo $DEST 
+# echo ${DARGS[0]}
+# echo ${#DARGS[1]}
+# echo $#
+
+REMOTEHOST=`echo $DEST | sed 's/:.*$//'`
+# echo $REMOTEHOST
+if [ $REMOTEHOST = $DEST ]; then
+	echo No hostname detected in arguments
+	exit 1
+fi
+
+while [ $# -gt 1 ]; do
+	if ( ssh $REMOTEHOST test -e \"${1}\" ) ; then 
+		echo \`${1}\' already exists on destination
+		# overwrite yes/no etc etc
+		read -p "Overwrite [y/N]? " yn
+		[ "$yn" != "y" -a "$yn" != "Y" ] && { shift; continue; }
+	fi
+	scp "${1}" $DEST
+	shift
+done
+

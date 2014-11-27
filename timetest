@@ -1,0 +1,10 @@
+echo =======================================================
+echo Hardware clock and system date
+/sbin/hwclock -r; date
+echo -------------------------------------------------------
+echo Adjtime data
+cat /etc/adjtime
+echo -------------------------------------------------------
+echo Hosts running NTP
+/usr/sbin/ntpdate -q ntp eddy ring gyre wave tsunami 
+echo -------------------------------------------------------

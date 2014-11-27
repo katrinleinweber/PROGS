@@ -1,0 +1,16 @@
+#!/bin/sh
+# creates a unique filename based on the temp??????? template
+#
+DIR=${1%/*}
+NAME=${1##*/}
+
+BASE=${DIR:=.}/${NAME}`date +%s`
+echo $BASE
+FIL=$BASE
+while [ -e $FIL ]
+do
+	EXT=$((${EXT:--1}+1)) 
+	FIL=$BASE.$EXT
+done
+echo $FIL
+

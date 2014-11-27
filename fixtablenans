@@ -1,0 +1,3 @@
+#!/usr/bin/gawk -f
+/NaN/{$0=gensub("\\$[[:blank:]]*NaN[[:blank:]]*\\$","---","g",$0)}
+{print}

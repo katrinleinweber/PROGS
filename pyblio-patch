@@ -1,0 +1,12 @@
+--- Pyblio/ConfDir/Base.py.orig	Sun Oct 28 17:02:23 2001
++++ Pyblio/ConfDir/Base.py	Sun Oct 28 16:57:45 2001
+@@ -98,7 +98,8 @@
+     }
+ 
+ 
+-Config.set ('base/lyxpipe', '~/.lyx/lyxpipe')
++# Config.set ('base/lyxpipe', '~/.lyx/lyxpipe')
++Config.set ('base/lyxpipe', '/tmp/'+os.path.expandvars('$USER')+'.lyxpipe')
+ 
+ # --------------------------------------------------
+ 

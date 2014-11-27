@@ -1,0 +1,14 @@
+#! /bin/bash
+
+# Usage: whos <matfilename>
+# Prints the contents of matfilename
+
+FILE=${1?No matfile name}
+
+echo -e "more off; whos -file $FILE" | matlab -nojvm |
+	awk 'BEGIN{pr=0}pr{gsub("^>> ?",""); print}/^done with startup/{pr=1}' 
+	# cat -v 
+	# grep -v "^>>$"
+
+
+	# awk 'BEGIN{pr=0}pr{print}/^done with startup/{pr=1}' | 

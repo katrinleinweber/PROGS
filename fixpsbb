@@ -1,0 +1,19 @@
+#!/bin/sh
+# Fixes a Postscript files bounding box so that epsffit will read it.
+# Applies to GMT plots that have a line %%BoundingBox: (atend)
+# at the top and the bounding box appears at the end of the file
+
+# Grep the file for  /%%BoundingBox/
+# Awk the file and comment out %%BoundingBox lines
+#              writing the grepped line at the top
+
+FILE=${1:?}
+
+awk -v BBox="`cat $FILE | grep "%%BoundingBox" | tail -n1`" '
+	/^%%BoundingBox/{
+		if (!done){print BBox; done=1} 
+		printf "%% "; print;
+		}
+	!/^%%BoundingBox/{print}
+' $FILE
+

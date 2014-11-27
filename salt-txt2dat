@@ -1,0 +1,62 @@
+#! /bin/bash
+# This is a wrapper for a sed script which reformats salinity data file.
+# One column needs to be multiplied by 2. So we pass it through our friend awk.
+
+# CREATED BY: CMDR  2008/01/08
+#
+# $Revision: 1.1 $
+# $Date: 2008/11/09 21:04:17 $
+# $Id: salt-txt2dat,v 1.1 2008/11/09 21:04:17 duncombe Exp $
+#
+
+sed -n '
+# This is a sed script. Run it by doing
+# sed -n -f salt-txt2dat.sed [inputfile] [> outputfile]
+
+# This script parses a salts.txt file. The file consists of 8
+# columns of numbers interspersed with comments and standard
+# samples. The last column represents a time.  Comments have a
+# lot of [A-Za-z]. This is often only the first line, header. The
+# standard samples have an extra column and a niskin sample
+# number of 1000. The way the regex is constructed these extra
+# column lines are ignored. Occasionally I have noticed that an
+# extra column appears where the sample bottle number changes. Be
+# sure to edit the input file carefully before running the script
+# to ensure you retain all the necessary information therein. 
+
+# # First print out some column identifiers. We extract the data we
+# # need from the text file but we need to come along later and add
+# # in the niskin positions and stations from the log sheets. 
+# # These are the columns we want in the output:
+# Station	NiskinPosition	SampleBottle	AutoSalRatio	Salinity
+# We want to take out certain columns. There does not seem to be a
+# way to make an easy shortcut using braces and parentheses out of
+# this except to represent each word in full in the regex.
+# (Actually there are shortcuts but it was easier to do it this
+# way by cut and paste in vi than by laboriously counting columns
+# and checking they are grouped correctly) 
+# We write out columns 1, 5 and 6 which are SampleNumber, ConductivityRatio,
+# and Salinity, resp. Note that we need ConductivityRatio*2 to pass 
+# to the next step. Therefore we put the output through awk to do 
+# the multiplication (we cannot use the column 3 labelled AutoSalRatio 
+# because that number is corrected by column 4).  
+#	0001	24	2.01849	0.00001	1.00925	35.3642	0.00000	14:25:00	
+#                11111111                 22222222                 33333333                 444444444                 55555555                 66666666                 77777777                 88888888               
+s/^[[:space:]]*\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.-]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9:]\+\)[[:space:]]*$/		\1	\5	\6/p
+
+###### below was for testing while writing the script
+# /^[[:space:]]*\([0-9.:]\+[	]\+\)\{7,9\}\([0-9:]\+$/
+# s/^\([0-9]\+[	%]\+[0-9]\+	[0-9]\+\)	[0-9]\+\(	[0-9.]\+\)	[0-9.]\+	[0-9.]\+\(^I[0-9.]\+\).*$/\1\2\3/
+# /^[[:space:]]*\([0-9.]\+[[:space:]]\+\)\{7,9\}\([0-9:]\+\)[[:space:]]*$/p
+# s/^[[:space:]]*\([0-9.]\+[[:space:]]\+\)\{7\}\([0-9:]\+\)[[:space:]]*$/		\1\3\6/p
+# s/^[[:space:]]*\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9.]\+\)[[:space:]]\+\([0-9:]\+\)[[:space:]]*$/\1	\3	\6/p
+# s/[0-9][0-9]+/a/g
+
+' $1 | awk '
+	BEGIN{	OFS="\t";
+		OFMT="%.8g";
+		print "Station	NiskinPosition	SampleBottle	" \
+			"CondRatio*2	Salinity";}
+	{print "\t",$1,$2*2,$3}'
+
+

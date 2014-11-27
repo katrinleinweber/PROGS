@@ -1,0 +1,5 @@
+#!/bin/sh
+
+gawk -f sealib.awk -f mathlib.awk -f ctp2s87.awk $@
+
+

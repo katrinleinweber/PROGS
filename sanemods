@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# provide sane permissions modes for files in a directory tree
+# note BSD and linux want different options to display changes as
+# they are made
+
+OS=`uname -s`
+VERB=$( if [ "$OS" == "Darwin" ]; then
+		echo "-vv" 
+	elif [ "$OS" == "Linux" ]; then
+		echo "-c"
+	else
+		echo " "
+	fi)
+
+while [ "$1" ]; do
+	find $1 -type f -exec chmod $VERB a+r,go-w \{\} \; -o	\
+		-type d -exec chmod $VERB a+rx,go-w \{\} \; 
+	shift
+done
+
+echo No more directories to search
+
