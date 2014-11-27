@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ $# = 0 ]; then
+	DIR=.
+else
+	DIR=$@
+fi
+
+for dir in $(find $DIR -name ".git" -type d -exec dirname \{\} \;  ); do
+	{ 
+	pushd $dir  > /dev/null
+	echo $dir
+	# be sure to have an upstream branch set
+	git remote -v update 
+	git status -s 
+	git --no-pager log origin/master..HEAD --oneline
+	echo ==============
+	popd > /dev/null
+	} 2>&1 
+done
+
+# vim: se nowrap tw=0 :
+
