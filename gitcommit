@@ -1,0 +1,35 @@
+#!/bin/bash
+
+function printhelp(){
+	echo $0: creates a commit message and does \"git commit\"
+	exit
+}
+
+Args=$@
+
+while [ $# -gt 0 ] 
+do 
+   case $1 in 
+        -h)    printhelp ;;
+	--help) printhelp ;;
+   esac
+   test $# -gt 0 && shift
+done
+
+
+files=$(git status --porcelain | awk '{print $2}' )
+num=$(git status --porcelain | wc -l)
+
+if [ ${num} -eq 0 ]; then 
+	echo "No files to commit. Run ""git add <filename>"" to stage files." 
+	exit 1
+fi
+
+if [ ${#files} -le 50 ]; then
+	# git commit -m "Updating ${files}"
+	git commit -m "`echo Updating ${files}`"
+else
+	git commit -m "Updating ${num} files"
+fi
+
+
