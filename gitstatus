@@ -1,0 +1,12 @@
+#!/bin/bash
+if ! git rev-parse -q > /dev/null 2>&1 ; then
+	echo Not a git repository here
+	exit 1
+fi
+echo -------
+git remote -v
+echo -------
+git branch -a
+echo -------
+git status ${1:--uno}
+echo -------

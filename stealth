@@ -5,7 +5,7 @@ export PATH=$PATH:~/IMAGES/pron/bin
 export AWKPATH=$AWKPATH:~/IMAGES/pron/bin
 # export PROMPT_COMMAND=$(echo $PROMPT_COMMAND | sed "s/;[^;]*bash_eternal_history[^;]*;/; /")
 
-bash
+bash --norc
 
 kill -9 $PPID
 
