@@ -22,7 +22,7 @@ files=$(git status --porcelain | awk '{system("basename " $2)}' )
 num=$(git status --porcelain | wc -l)
 
 if [ ${num} -eq 0 ]; then 
-	echo "No files to commit. Run ""git add <filename>"" to stage files." 
+	echo "No files to commit. Run \"git add <filename>\" to stage files." 
 	exit 1
 fi
 
