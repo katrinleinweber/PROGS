@@ -200,6 +200,9 @@ REFSBIBFILE=$TMPDIR/found.bib
 # the result to a temporary file, then move it to REFSBIBFILE. Any
 # number of terms will work then. Overhead? 
 
+# echo $REFSPROGS
+# echo $#
+
 ${REFSPROGS}/findref $1 ${REFSDIR}/${REFSFILE} > ${REFSBIBFILE}; shift; 
 while [ $# -gt 0 ]; do 
 	${REFSPROGS}/findref $1 ${REFSBIBFILE} > ${TMPFILE} ; shift ; 
