@@ -169,6 +169,10 @@ function human(num,
 	if (num>1024){unit="Y"; num/=1024} 
 	return sprintf("%.1f%c",num,unit)
 	}
+# unum=0
+# unit=" kMGTTPEZY"
+# while (num>1024){unum++;num/=1024}
+# return sprintf("%.1f%c",num,unit[unum])
 
 function c2f(c){
 # converts celsius to fahrenheit

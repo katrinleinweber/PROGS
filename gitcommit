@@ -18,7 +18,7 @@ done
 
 
 files=$(git status --porcelain | awk '{print $2}' )
-num=$(git status --porcelain | wc -l)
+num=$(git status --porcelain | grep -v "^??" | wc -l)
 
 if [ ${num} -eq 0 ]; then 
 	echo "No files to commit. Run ""git add <filename>"" to stage files." 
