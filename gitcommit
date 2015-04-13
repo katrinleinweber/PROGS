@@ -17,8 +17,8 @@ do
 done
 
 
-files=$(git status --porcelain | grep -v "^??" | awk '{print $2}' )
-num=$(git status --porcelain | grep -v "^??" | wc -l)
+files=$(git status --porcelain | grep -v "^[ ?]" | awk '{print $2}' )
+num=$(git status --porcelain | grep -v "^[ ?]" | wc -l)
 
 if [ ${num} -eq 0 ]; then 
 	echo "No files to commit. Run ""git add <filename>"" to stage files." 
@@ -27,9 +27,10 @@ fi
 
 if [ ${#files} -le 50 ]; then
 	# git commit -m "Updating ${files}"
-	git commit -m "`echo Updating ${files}`"
+	MESSAGE="`echo Updating ${files}`"
 else
-	git commit -m "Updating ${num} files"
+	MESSAGE="Updating ${num} files"
 fi
 
+git commit -m "$MESSAGE"
 
