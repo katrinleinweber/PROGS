@@ -1,0 +1,85 @@
+#! /bin/bash 
+
+if [ $# -eq 0 ]; then 
+	echo Usage: $0 \[gs options\] \<from files\> \<to-file\>
+	echo Files with png extension are converted to pdf before concatenating
+	echo A useful gs option: -sPAPERSIZE=letter
+	echo A useful gs option: -dPDFSETTINGS=/screen \(/ebook /printer\)
+	echo gs option: -dPDFSETTINGS=/prepress will embed fonts for portabillity
+	exit 1
+fi
+
+# do we want postscript output or pdf output?
+if [ "`basename $0`" = "batchps" ] ; then
+	DRIVER='pswrite'
+elif [ "`basename $0`" = "batchpdf" ] ; then
+	DRIVER='pdfwrite'
+else
+	echo $0 expects to be called as ``batchpdf'' or ``batchps''
+	exit 1
+fi
+
+# using counters I, J, K
+NOPTS=$#
+OVERWRITE=false
+while [ $((I++)) -lt $((NOPTS-1))  ] ; do 
+    	case $1 in 
+		# force an overwrite without asking
+		-f)	OVERWRITE=true
+			;;
+		# collect any options to pass to gs
+		-*)
+			GSOPTIONS[$((J++))]=$1
+	    		;; 
+		*.png|*.jpg)
+			# if an input file does not exist, bail
+			# and remove all evidence
+			[ ! -e $1 ] && {
+				echo $1 input file not found 
+				# if we created any temporary files, remove them
+				[ ${#TMPFILES[@]} -gt 0 ] && rm ${TMPFILES[@]}
+				exit 1
+				}
+			TMPFIL=`mktemp`
+			convert $1 pdf:$TMPFIL
+			INFILES[$((L++))]=$TMPFIL
+			# make a list of the TMPFILs to delete them later
+			TMPFILES[$((K++))]=$TMPFIL
+			;;
+		*)
+			# if an input file does not exist, bail
+			# and remove all evidence
+			[ ! -e $1 ] && {
+				echo $1 input file not found 
+				# if we created any temporary files, remove them
+				[ ${#TMPFILES[@]} -gt 0 ] && rm ${TMPFILES[@]}
+				exit 1
+				}
+		 	INFILES[$((L++))]=$1
+	    		;;
+	esac
+	shift
+done
+
+[ -e $1 ] && {
+    # if the outputfile exists, do we want to continue?
+    if ! $OVERWRITE ; then 
+	read -p "Output file $1 exists. Overwrite? (y/N) " ANS
+	# if not, bail and remove all evidence
+	[ "$ANS" = "y" -o "$ANS" = "Y" ] || {
+		[ ${#TMPFILES[@]} -gt 0 ] && rm ${TMPFILES[@]}
+		exit 2 
+		}
+    fi
+	}
+
+OUTFILE=$1 
+
+# echo beginning ghostscript
+gs -q -dSAFER -dNOPAUSE -dBATCH ${GSOPTIONS[@]} \
+	-sDEVICE=${DRIVER} -sOutputFile=${OUTFILE} \
+	${INFILES[@]}
+
+# if we created any temporary files, remove them
+[ ${#TMPFILES[@]} -gt 0 ] && rm ${TMPFILES[@]}
+
