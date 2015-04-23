@@ -1,0 +1,24 @@
+#!/usr/bin/gawk -f
+BEGIN{
+# 	TBASE="/usr/local/share/bathy/tbase/tbase.grd"
+	TBASE=ENVIRON["TBASE"];
+
+	if (TBASE==""){
+		print "export TBASE=<gridded_topography_file>"
+		exit 1
+		}
+
+	HOST=ENVIRON["HOST"];
+
+	bathy=""
+	}
+
+NR==1{ lat=$4; lon=$5 ; comm="echo " lon " " lat " | grdtrack -Z -G" TBASE 
+	comm | getline TZ 
+	TZ=-TZ;
+	}
+/^[^#].*ZZ/{bathy="#"}
+/^@/{	print "# " strftime("%Y/%m/%d %H:%M: ") "Bathymetry from " HOST ":" TBASE " =" TZ ; 
+	print bathy "&ZZ=" TZ
+	}
+{print}

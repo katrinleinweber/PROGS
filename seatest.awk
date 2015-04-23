@@ -1,0 +1,3 @@
+BEGIN{
+	sw_test();
+}

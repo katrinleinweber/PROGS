@@ -1,0 +1,70 @@
+#!/bin/sh
+
+gawk -f mathlib.awk --source '
+BEGIN{
+	OFS="\t"
+	cruise="D290B/D291B"
+	}
+
+# // This is a MK21 EXPORT DATA FILE  (EDF)
+# //
+# Date of Launch:  03/25/2005
+# Time of Launch:  05:36:43
+# Sequence #    :  4
+# Latitude      :  35 4.55713S
+# Longitude     :  25 21.36914E
+# Serial #      :  4016451
+# D291::  887
+# user::  Franklin
+#//
+#// Here are the contents of the memo fields.
+#//
+#//
+#// Here is some probe information for this drop.
+#//
+#Probe Type       :  XCTD-2
+#Terminal Depth   :  1850 m
+#Depth Equation   :  Standard
+#Depth Coeff. 1   :  0.0
+#Depth Coeff. 2   :  3.3997
+#Depth Coeff. 3   :  -0.0003
+#Depth Coeff. 4   :  0.0
+#Pressure Pt Correction:  100.0%
+#//
+#Raw Data Filename:  C:\SIPPICAN\WINMK21\DATA\C4_00004.RDF
+#//
+#Display Units    :  Metric
+#//
+#// This XCTD export file has not been noise reduced or averaged.
+#//
+#Depth (m) - Temperature (°C) - Conductivity (mS/cm) - Salinity (ppt) - Sound Velocity (m/s) - Density (kg/m³)
+
+FNR==1{ hdr=1;}
+{gsub(//,"")}
+/^[0-9. 	]+$/{
+	if (hdr){
+		print "XE374" " " grd " " 1 " " lat " " lon " " dat " " day " " tim " " cruise
+		# print NF
+		if (NF==6){ print "@DE\tTE\tCO\tSA\tSV\tS0"}
+		if (NF==3){ print "@DE\tTE\tSV"}	
+		hdr=0;
+		}
+	print
+	}
+
+
+/^Latitude/{  lat=parsepos(substr($0,16)) }
+/^Longitude/{ lon=parsepos(substr($0,16)) }
+
+/^Time of Launch/{ tim=substr($0,16)}
+/^Date of Launch/{
+	dstr=substr($0,16);
+	gsub(/ /,"",dstr);
+	split(dstr,D,"/");
+	dat=D[3] "/" D[1] "/" D[2]
+	day=date2day(D[3],D[1],D[2]);
+
+#gensub(/^([0-9][0-9])\/([0-9][0-9])\/[0-9]\{4\}/,"\3/\1/\2" )
+	}
+/^Sequence/{ grd=substr($0,16) }
+' $* 

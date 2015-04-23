@@ -1,0 +1,17 @@
+#!/usr/bin/gawk -f
+BEGIN{	OFS="\t"
+	data=0
+	}
+{sub(/[ 	]+$/,"")}
+data{	for (i=1;i<NF;i++){
+		printf "%g\t",$i
+		}; 
+	printf "%g\n",$NF
+	}
+!data&&!/y=1x\+0/{
+	print
+	}
+/y=1x\+0/{ print "# " strftime("%d-%b-%Y %H:%M") ": Remove trailing zeroes and redundant regression comments"}
+/^@/{
+	data=1
+	}

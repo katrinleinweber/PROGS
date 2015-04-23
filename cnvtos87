@@ -1,0 +1,7 @@
+#!/bin/sh
+
+#
+# USAGE: cnvtos87 <fromfile> 
+#
+
+cnv2s87 $1 | s87depth | s87bathy | s87dens 

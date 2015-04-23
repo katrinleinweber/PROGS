@@ -1,0 +1,61 @@
+#!/bin/bash
+# Converts aoml data to s87 format files
+
+gawk -f sealib.awk -f mathlib.awk --source '
+   BEGIN{
+	base_ofn="stn";
+	cntr=0;
+   	stnr=1;
+	stnnum=0;
+	expo="";
+	finddata=1}
+# /Cast/{getline; Cast=$1; lat=$2; long=$3; jday=$4; split($5,da,"/"); gmt=$6}
+NR==2{Cast=$1; lat=$2; long=$3; jday=$4; split($5,da,"/"); gmt=$6}
+/expo/{expo=gensub(/^.*=(.*);.*$/,"\\1","1");}
+# finddata{pr2=pr1;pr1=pr0;pr0=$0}
+# /^[ 0-9.-]+$/ && finddata{finddata=0;
+NR==11{
+	n=split($0,pars," ")
+	for (i=1; i<=n; i++){
+	   if (pars[i]=="pr"){opars[i]=toupper(pars[i]); vpar[opars[i]]=i};
+	   if (pars[i]=="te"){opars[i]=toupper(pars[i]); vpar[opars[i]]=i};
+	   if (pars[i]=="th"){opars[i]="PT"; vpar[opars[i]]=i};
+	   if (pars[i]=="ht"){opars[i]="HZ"; vpar[opars[i]]=i};
+	   if (pars[i]=="ox"){opars[i]="OX"; vpar[opars[i]]=i};
+	   if (pars[i]=="sa"){opars[i]=toupper(pars[i]); vpar[opars[i]]=i};
+	   if (pars[i]=="de"){opars[i]=toupper(pars[i]); vpar[opars[i]]=i};
+	   }
+	# for (i=1;i<=n; i++){print opars[i]}
+	# {print NR}
+	# output s87 header
+	print "C9999",Cast,1,lat,long,da[3] "/" da[1] "/" da[2],jday,\
+		substr(gmt,1,2) ":" substr(gmt,3,2),expo   
+	printf "@"; 
+	for (i=1; i<n; i++){printf "%s\t", opars[i]}; printf "%s\n",opars[i]
+	}
+	# process the data block
+# !finddata{
+NR>=13{
+	# conversion obtained from ox_units.m in AOML/CTD/ctdcal
+	#  ox .* (0.022403 .* pdens ./ 1000);
+	pdens=sw_pden(opars[vpar["SA"]], opars[vpar["TE"]], opars[vpar["PR"]], 0);
+	$vpar["OX"]=$vpar["OX"] * pdens * 0.022403 / 1000 ;
+	for (i=1; i<n; i++){printf "%g\t", $vpar[opars[i]]}; printf "%g\n",$vpar[opars[i]]
+	}
+	
+	# print ofn
+	# TPPCC SSSS CC SDD.DDDD SDDD.DDDD YY/MM/DD YDA HH:MM CRUISE_ID 
+	# print "C" $1 $2, $4, 1, $9, $10, $5 "/" $6 "/" $7, date2day($5,$6,$7), "12:00", $3 > ofn
+	# }
+   # stnr==2{ print "@" $0 > ofn}
+   # stnr>=3{ print > ofn}
+   # {	stnr++;}
+# 
+# 
+   # END{ 
+	# close(ofn)
+      # }
+# # # # # # # # # 
+ ' $@
+
+
