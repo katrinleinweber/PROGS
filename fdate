@@ -1,0 +1,4 @@
+#!/bin/sh
+s=$1 
+date "+%Y$s%m$s%d"
+
