@@ -243,13 +243,13 @@ if [ $OUTP = "bib" ] ; then
 else
 	# if required modify the bibfile so the filename is provided
 	# if available
-	if [ "$FILE" = "file" ]; then
+	if [ "$FILE" = "file" ]; then  # {{{
 	   # modify the bibfile
 	   TMPFIL=$(mktemp)
 	   gawk ' BEGIN{ RS=""; FS="\n"; IGNORECASE=1;
 	   	# ORS="\n\n"; OFS="\n";
 	   	}
-	           {N=split($0,REC); NIND=0; FIND=0; NOTE=""; FNAME="";
+	           {N=split($0,REC); NIND=0; NOTE=""; FIND=0; FNAME=""; AIND=0; ACCESS="";
 	   	for (i=1;i<=N;i++){
 	   	   if (REC[i]~/^[[:blank:]]*file/){
 	   	      FNAME=gensub(/^.*["{]([^}"]*)[}"].*$/,"\\1","g",REC[i]);
@@ -261,20 +261,35 @@ else
 	   	   if (REC[i]~/^[[:blank:]]*note/){
 	   	      NOTE=gensub(/^.*["{]([^}"]*)[}"].*$/,"\\1","g",REC[i]);
 	   	      NIND=i; }
-	   	}	
-		# if the filename is required let bibtex add it by
+		   if (REC[i]~/^[[:blank:]]*accession/){
+	   	      ACCESS=gensub(/^.*["{]([^}"]*)[}"].*$/,"\\1","g",REC[i]);
+			# this idea is to ensure the case of the filename
+			# is maintained, but its not working (cleanbbl.awk
+			# is not working right)
+			# FNAME=gensub(/([[:upper:]])/,"{\\1}","g",FNAME);
+	   	      AIND=i; }
+	   	}
+		# if the filename or accession is required let bibtex add it by
 		# providing it as a note
-	   	if (FIND){
-	   	   if (NIND){ REC[NIND]="NOTE = {" NOTE " {" FNAME "}},"; }
+	   	if (AIND){
+	   	   if (NIND){ REC[NIND]="NOTE = {" NOTE " {[Reprint " ACCESS "}},"; }
 	   	   	else
-	   	   	{ REC[N]="NOTE = {{" FNAME "}},"; 
+	   	   	{ REC[N]="NOTE = {{Reprint " ACCESS "}},"; 
+	   	     	REC[++N]="}";
+	   	   	}
+	   	   }
+	   	if (FIND){
+	   	   if (NIND){ REC[NIND]="NOTE = {" NOTE " { File " FNAME "}},"; }
+	   	   	else
+	   	   	{ REC[N]="NOTE = {{File " FNAME "}},"; 
 	   	     	REC[++N]="}";
 	   	   	}
 	   	   }
 	   	for (i=1;i<=N;i++){print REC[i]}
 	   	}' $REFSBIBFILE > $TMPFIL
 	   mv $TMPFIL $REFSBIBFILE
-	fi
+	fi # }}}
+
 	# here we plug in our desired bibliographic style as we
 	# copy the blank tex file across
 	# try creating directly without using a template file
