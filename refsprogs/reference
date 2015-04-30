@@ -91,7 +91,7 @@
 # Change these to what your default setup is. To change temporarily, set
 # environment variables in the shell before calling the script
 #
-REFSPROGS=${REFSPROGS:-$HOME/PROGS}
+REFSPROGS=${REFSPROGS:-$HOME/PROGS/refsprogs}
 REFSDIR=${REFSDIR:-$HOME/DOCS/REFS}
 REFSFILE=${REFSFILE:-cmdrrefs.bib}
 REFSTEXFILE=${REFSTEXFILE:-barebones}
@@ -327,7 +327,7 @@ ENDIN
 	  ) > /dev/null 2>&1
 
 	# clean the bbl file of latex markup 
-	[ "$OUTP" = "asc" ] && gawk -f cleanbbl.awk $REFSTEXFILE.bbl
+	[ "$OUTP" = "asc" ] && gawk -f $REFSPROGS/cleanbbl.awk $REFSTEXFILE.bbl
 	# or print out the bibitems
 	[ "$OUTP" = "bbl" ] && cat $REFSTEXFILE.bbl | awk \
 'BEGIN{nowprinting=0}
