@@ -70,7 +70,8 @@
 # $REFSPROGS (default $HOME/PROGS)
 # $REFSTEXFILE (default barebones)
 #
-# What about using $BIBINPUTS and $BSTINPUTS ?
+# $BIBINPUTS and $BSTINPUTS are used if they are available from the
+# environment
 # 
 # CREATED -	earliest version seen: 2003?
 #	$Revision: 1.24 $
@@ -83,13 +84,27 @@
 #	Add options to turn off settings (eg nofile)
 #    2011-02-12 
 # 	Allow to set some defaults using environment variables set in the shell 
+#    2015-04-30 
+# 	Add tests to confirm locations of files. Test for and deal with
+# 	missing BSTINPUTS and BIBINPUTS locations.
  
 # Change these to what your default setup is. To change temporarily, set
 # environment variables in the shell before calling the script
+#
 REFSPROGS=${REFSPROGS:-$HOME/PROGS}
 REFSDIR=${REFSDIR:-$HOME/DOCS/REFS}
 REFSFILE=${REFSFILE:-cmdrrefs.bib}
 REFSTEXFILE=${REFSTEXFILE:-barebones}
+
+# ensure that the files are available
+[ ! -d $REFSPROGS ] && { echo $REFSPROGS not found; exit 3 ;}
+[ ! -d $REFSDIR ] && { echo $REFSDIR not found; exit 3 ;}
+[ ! -f $REFSDIR/$REFSFILE ] && { echo $REFSDIR/$REFSFILE not found; exit 3 ;}
+[ ! -f $REFSPROGS/$REFSTEXFILE.tex ] && { echo $REFSPROGS/$REFSTEXFILE.tex not found; exit 3 ;}
+
+export BSTINPUTS=${BSTINPUTS:-"$REFSPROGS:$(dirname `kpsewhich natbib.sty`)"}
+# echo $BSTINPUTS
+export BIBINPUTS=${BIBINPUTS:-$REFSDIR}
 
 # default output
 OUTP=${REFERENCETYPE:-asc}
