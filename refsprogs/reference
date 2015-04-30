@@ -112,6 +112,8 @@ KEEP=nokeep
 FILE=file
 JOUR=${STYLEBST:-agufull08}
 
+
+
 function helpmessage(){
 cat << ENDIN
 Usage: $0 [options] <searchterms> 
@@ -197,6 +199,9 @@ done
 # after the options are processed, what remains should be search
 # terms
 SEARCH=${1:?What am I looking for?} 
+
+# TODO:
+# test if the style file will be found
 
 # See comments below. Should be able to avoid this limitation.
 # if [ $# -gt 10 ]; then echo Limit of arguments to filter is 9. ; fi;
