@@ -5,7 +5,7 @@ function printhelp(){
 	exit
 }
 
-Args=$@
+# Args=$@
 
 while [ $# -gt 0 ] 
 do 
