@@ -231,17 +231,19 @@ def select_active_leases(leases_db, as_of_ts):
 
         return retarray
 
+def find_lease_file():
+        leasefiles = ['/var/lib/dhcpd/dhcpd.leases','/var/lib/dhcp/dhcpd.leases'] 
+        for filename in leasefiles:
+
+                if os.path.isfile(filename):
+                        return filename
+
+        print "Leases file not found"
+        print "Tried", ", ".join(leasefiles)
+
+        exit()
 
 ##############################################################################
-
-def find_lease_file():
-    leasefiles = ['/var/lib/dhcpd/dhcpd.leases','/var/lib/dhcp/dhcpd.leases'] 
-    for filename in leasefiles:
-	if os.path.isfile(filename):
-		return filename
-    print "Leases file not found"
-    print "Tried", leasefiles
-    exit()
 
 filename = find_lease_file()
 
