@@ -1,5 +1,13 @@
 #!/usr/bin/python
-import datetime, bisect
+# 
+# This python script found on askubuntu. Cannot find it elsewhere, no
+# mention of copyright. Posted by Canadian Luke and attributed to "our
+# company".
+# 
+# c6826e34-64c9-4c7e-ae25-6979d69a0c53
+# 
+
+import datetime, bisect, os
 
 def parse_timestamp(raw_str):
         tokens = raw_str.split()
@@ -226,8 +234,18 @@ def select_active_leases(leases_db, as_of_ts):
 
 ##############################################################################
 
+def find_lease_file():
+    leasefiles = ['/var/lib/dhcpd/dhcpd.leases','/var/lib/dhcp/dhcpd.leases'] 
+    for filename in leasefiles:
+	if os.path.isfile(filename):
+		return filename
+    print "Leases file not found"
+    print "Tried", leasefiles
+    exit()
 
-myfile = open('/var/lib/dhcpd/dhcpd.leases', 'r')
+filename = find_lease_file()
+
+myfile = open(filename, 'r')
 leases = parse_leases_file(myfile)
 myfile.close()
 
