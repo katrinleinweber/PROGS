@@ -1,0 +1,1 @@
+find . \( -iname "*.ods" -o -iname "*.sxc" -o -iname "*.xls" -o -iname "*.csv" -o -iname "*.ots" -o -iname "*.stc" -o -iname "*.dif" -o -iname "*.dbf" -o -iname "*.xlt" -o -iname "*.slk" -o -iname "*.xlsx" -o -iname "*.xml" -o -iname "*.fods" -o -iname "*.uos" \) -print 
