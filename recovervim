@@ -1,0 +1,25 @@
+#! /bin/bash
+
+FILE=${1:?}
+NEWFILE=$(dirname $FILE)/.$(basename $FILE|sed 's/^\.//').recover
+
+if [ -e $NEWFILE ]; then 
+	echo Recovery file
+	echo $NEWFILE 
+	echo already exists. Clear it first.
+	exit 1
+fi
+
+SWPFILE=$(echo $NEWFILE |sed 's/\.recover$/.swp/')
+
+# echo $FILE
+# echo $NEWFILE
+# echo $SWPFILE
+
+if [ -e $SWPFILE ]; then 
+	vim -r $FILE +":w ${NEWFILE}|:q"
+	diff -s -w $FILE $NEWFILE 
+
+fi
+
+

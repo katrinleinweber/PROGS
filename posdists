@@ -1,0 +1,7 @@
+#!/bin/sh
+gawk -f mathlib.awk --source '
+BEGIN{FS="\t"}
+{la1=parsepos($1); lo1=parsepos($2)}
+NR>1{
+ print "(" la2 ";" lo2 ") to (" la1 ";" lo1 ")=\t" distance(la1,lo1,la2,lo2)}
+{la2=la1;lo2=lo1} ' $@

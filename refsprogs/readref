@@ -1,0 +1,70 @@
+#! /bin/bash 
+SEARCHPATHS=(~/Library ~/Reprints/incoming/inrefs)
+BIBDIR=~/DOCS/REFS
+BIBFILE=cmdrrefs.bib
+READER=acroread
+
+shopt -s extglob
+
+# note that -n is interpreted as an option by echo, and
+# suppresses a newline
+# DIMBULB! can be overcome thusly: echo A$1 | grep "^A-"
+while ( echo "A$1" | grep "^A-" > /dev/null ); do 
+	case $1 in
+	-?(-)reader=* ) READER=${1#-*reader=}
+		shift 
+		;;
+	-n ) 	READER="acroread -openInNewWindow"
+		shift
+		;;
+	-* )	echo Option not recognised $1
+		exit 2
+		;;
+	esac
+done 
+
+# echo $READER
+ARG=${1:?Put an identifier to find the file with}
+
+FOUND=$(mktemp -t foundfiles.XXXXXXXXX)
+
+# locate $ARG | grep -E "Library|inref" > $FOUND
+find ${SEARCHPATHS[@]} -print |
+		grep -E "$ARG" > $FOUND
+
+FILE=$(tail -n1 $FOUND)
+
+if [ -z $FILE ] ; then
+	FILENM=$(cd $BIBDIR ; ./findref "$ARG" $BIBFILE |
+		grep FILE | sed 's/.*[{"]\(.*\)[}"],.*$/\1/')
+	if [ -n "$FILENM" ]; then
+		# locate $FILENM |grep -E "Library|inref"  > $FOUND
+		find ${SEARCHPATHS[@]} -print |
+			grep -E "$FILENM" > $FOUND
+		FILE=$(tail -n1 $FOUND)
+	fi
+fi
+
+if [ -z $FILE ] ; then
+	 ~/Library/checkout "$ARG"
+	find ~/Library/ -iname "$ARG" -print > $FOUND
+	FILE=$(tail -n1 $FOUND)
+fi
+
+FF=`wc -l $FOUND | awk '{print $1}'`
+if [ $FF -gt 1 ]; then
+	echo Total of $FF files found.
+	cat $FOUND
+	echo Found list is in $FOUND
+else
+	rm $FOUND
+fi
+
+
+if [ "$FILE" ]; then 
+	echo Using: \"${FILE}\"
+	${READER}  $FILE & 
+else
+	echo \"${ARG}\" not found
+fi
+

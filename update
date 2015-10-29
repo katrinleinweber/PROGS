@@ -1,0 +1,18 @@
+# repeat making whenever the document changes
+
+FILE=${1:?}
+# create a lockfile
+LOCKFILE="#$FILE.update_lock"
+if [ -e $LOCKFILE ]; then 
+	echo $FILE lockfile exists. Is repeat make already running?
+	exit 1
+else
+	echo $$ > $LOCKFILE
+fi
+
+trap "rm -f \$LOCKFILE ; exit " INT TERM EXIT 
+while true; do
+	make -s $FILE
+	sleep 2
+done
+
