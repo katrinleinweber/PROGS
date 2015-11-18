@@ -6,6 +6,10 @@
 # record. think about putting more than one value on a
 # line.
 # 2013-03-26 on Endeavor EN522 - SPURS2
+if [ "x$AWKPATH" == "x" ]; then
+	export AWKPATH=`dirname $(which $0)`
+fi
+
 (
 if [ "x$1" == "x" ]; then 
 	# use it as a pipe

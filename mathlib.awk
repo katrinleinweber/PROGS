@@ -159,6 +159,7 @@ function human(num,
 	unit){
 # renders a number into human readable form.
 # 2013-03-26 on Endeavor (SPURS2)
+	unit=" "
 	if (num>1024){unit="k"; num/=1024}
 	if (num>1024){unit="M"; num/=1024}
 	if (num>1024){unit="G"; num/=1024}
