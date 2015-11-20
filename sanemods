@@ -14,8 +14,8 @@ VERB=$( if [ "$OS" == "Darwin" ]; then
 	fi)
 
 while [ "$1" ]; do
-	find $1 -type f -exec chmod $VERB a+r,go-w \{\} \; -o	\
-		-type d -exec chmod $VERB a+rx,go-w \{\} \; 
+	find "$1" -type f -exec chmod $VERB a+r,go-w \{\} \; -o	\
+		  -type d -exec chmod $VERB a+rx,go-w \{\} \; 
 	shift
 done
 
