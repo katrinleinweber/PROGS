@@ -6,14 +6,18 @@
 # record. think about putting more than one value on a
 # line.
 # 2013-03-26 on Endeavor EN522 - SPURS2
+if [ "x$AWKPATH" == "x" ]; then
+	export AWKPATH=`dirname $(which $0)`
+fi
+
 (
 if [ "x$1" == "x" ]; then 
-	# use it as a pipe
+	# argument list is empty, use it as a pipe
 	cat 
 else
 	# the argument is the value to be rendered
-	echo $1 
-fi ) | gawk -f mathlib.awk --source '{print human($1)}'
+	echo ${@}
+fi ) | gawk -f mathlib.awk --source '{$1=human($1); print}'
 
 # would this not work as well? 
 #   gawk -f ... --source ... $1
