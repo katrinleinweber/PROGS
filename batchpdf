@@ -1,14 +1,5 @@
 #! /bin/bash 
 
-if [ $# -eq 0 ]; then 
-	echo Usage: $0 \[gs options\] \<from files\> \<to-file\>
-	echo Files with png extension are converted to pdf before concatenating
-	echo A useful gs option: -sPAPERSIZE=letter
-	echo A useful gs option: -dPDFSETTINGS=/screen \(/ebook /printer\)
-	echo gs option: -dPDFSETTINGS=/prepress will embed fonts for portabillity
-	exit 1
-fi
-
 # do we want postscript output or pdf output?
 if [ "`basename $0`" = "batchps" ] ; then
 	DRIVER='pswrite'
@@ -19,9 +10,49 @@ else
 	exit 1
 fi
 
+if [ $# -eq 0 ]; then 
+	echo Usage: $0 \[gs options\] \<from files\> \<to-file\>
+	echo Files with png extension are converted to pdf before concatenating
+	echo A useful gs option: -sPAPERSIZE=letter
+	echo A useful gs option: -dPDFSETTINGS=/screen \(/ebook /printer\)
+	echo gs option: -dPDFSETTINGS=/prepress will embed fonts for portabillity
+	exit 1
+fi
+
+OVERWRITE=false
+
+while [ $((I++)) -lt $#  ] ; do 
+	eval P="\${$I}"
+    	case "${P}" in 
+		# force an overwrite without asking
+		-f)	OVERWRITE=true
+			;;
+	esac
+done
+
+eval last=\${$#}
+
+if [ -e $last ] && ! $OVERWRITE ; then
+	read -p "Output file $last exists. Overwrite? (y/N) " ANS
+	# if not, bail and remove all evidence
+	[ "$ANS" = "y" -o "$ANS" = "Y" ] && OVERWRITE=true || {
+		exit 2 
+		}
+fi
+
+# if $OVERWRITE ; then 
+# 	echo We will overwrite ; 
+# else 
+# 	echo We will not overwrite ; 
+# fi 
+
+
+# exit
+
 # using counters I, J, K
 NOPTS=$#
-OVERWRITE=false
+I=0; J=0; K=0
+
 while [ $((I++)) -lt $((NOPTS-1))  ] ; do 
     	case $1 in 
 		# force an overwrite without asking
