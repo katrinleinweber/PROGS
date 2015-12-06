@@ -64,7 +64,10 @@ cat << ENDIN > $NEWDOC && echo \`\`$NEWDOC\'\' created.
 
 \end{document}
 
+% vi : se nowrap tw=0 : 
+
 ENDIN
+
 
 
 
