@@ -1,0 +1,4 @@
+echo Board serial: `cat /sys/class/dmi/id/board_serial`
+echo Product UUID: `cat /sys/class/dmi/id/product_uuid`
+echo Machine ID: `cat /var/lib/dbus/machine-id`
+
