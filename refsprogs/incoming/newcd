@@ -35,31 +35,31 @@ CDDIR=$(pwd)/CD
 	# Note: the barebones.tex, reference and readref are in 
 	# ~/PROGS and should be copied over to DOCS/REFS to be 
 	# sure to have the latest versions 
-	for f in $( cat << ENDIN 
+		# /home/duncombe/DOCS/REFS/bibs2protea
+		# /home/duncombe/DOCS/REFS/bibs2vema
+		# /home/duncombe/DOCS/REFS/fixmonth
+		# /home/duncombe/DOCS/REFS/CVS
+		# /home/duncombe/DOCS/REFS/retired
+	for f in $( cat <<-ENDIN 
 		/home/duncombe/DOCS/REFS/abbreviations.dat
 		/home/duncombe/DOCS/REFS/abs.bib
 		/home/duncombe/DOCS/REFS/allbib.pdf
 		/home/duncombe/DOCS/REFS/bibrefs.com
-		/home/duncombe/DOCS/REFS/bibs2protea
-		/home/duncombe/DOCS/REFS/bibs2vema
 		/home/duncombe/DOCS/REFS/blank.j
 		/home/duncombe/DOCS/REFS/cmdrrefs.bib
 		/home/duncombe/DOCS/REFS/editref
 		/home/duncombe/DOCS/REFS/edrefs.help
-		/home/duncombe/DOCS/REFS/findref
-		/home/duncombe/DOCS/REFS/fixmonth
 		/home/duncombe/DOCS/REFS/inlist
 		/home/duncombe/DOCS/REFS/makeabs
 		/home/duncombe/DOCS/REFS/maxref
-		/home/duncombe/DOCS/REFS/CVS
 		/home/duncombe/DOCS/REFS/README.txt
-		/home/duncombe/DOCS/REFS/retired
 		/home/duncombe/DOCS/REFS/SFRI
-		/home/duncombe/PROGS/barebones.tex
-		/home/duncombe/PROGS/readref
-		/home/duncombe/PROGS/reference
-		/home/duncombe/PROGS/cleanbbl.awk
-ENDIN
+		/home/duncombe/PROGS/refsprogs/barebones.tex
+		/home/duncombe/PROGS/refsprogs/readref
+		/home/duncombe/PROGS/refsprogs/reference
+		/home/duncombe/PROGS/refsprogs/cleanbbl.awk
+		/home/duncombe/PROGS/refsprogs/findref
+	ENDIN
 			); do 
 ##########################################
 		cp -aiv $f $CDDIR
