@@ -1,0 +1,100 @@
+
+cd ~/Reprints/incoming
+
+echo "Make a new directory for the CD" 
+mkdir -p CD/papers
+
+# move the references to the CD dir
+mv -i inrefs CD/papers/pdf
+mkdir inrefs
+
+# At this point make sure that inrefs contains only <= 600MB of files,
+# backing out those that don't fit
+
+echo "Create new allbib.pdf"
+
+read -p "Is this done? (Y/N) " A
+if [ ! \( "$A" = "y" -o "$A" = "Y" \) ]; then 
+	echo $A
+else
+
+##########################################
+
+CDDIR=$(pwd)/CD
+
+# get files from ~/DOCS/REFS
+(
+	# have to rewrite reference before we can use it as reqd
+	# in the next line
+
+	reference . > $CDDIR/listing.txt
+
+	# then 	listing.txt will also be in the list below
+	# also have to rewrite makelink makename sortref newformat
+	# to deal with a bib file and put names in list below
+	# Note: the barebones.tex, reference and readref are in 
+	# ~/PROGS and should be copied over to DOCS/REFS to be 
+	# sure to have the latest versions 
+	for f in $( cat << ENDIN 
+		/home/duncombe/DOCS/REFS/abbreviations.dat
+		/home/duncombe/DOCS/REFS/abs.bib
+		/home/duncombe/DOCS/REFS/allbib.pdf
+		/home/duncombe/DOCS/REFS/bibrefs.com
+		/home/duncombe/DOCS/REFS/bibs2protea
+		/home/duncombe/DOCS/REFS/bibs2vema
+		/home/duncombe/DOCS/REFS/blank.j
+		/home/duncombe/DOCS/REFS/cmdrrefs.bib
+		/home/duncombe/DOCS/REFS/editref
+		/home/duncombe/DOCS/REFS/edrefs.help
+		/home/duncombe/DOCS/REFS/findref
+		/home/duncombe/DOCS/REFS/fixmonth
+		/home/duncombe/DOCS/REFS/inlist
+		/home/duncombe/DOCS/REFS/makeabs
+		/home/duncombe/DOCS/REFS/maxref
+		/home/duncombe/DOCS/REFS/CVS
+		/home/duncombe/DOCS/REFS/README.txt
+		/home/duncombe/DOCS/REFS/retired
+		/home/duncombe/DOCS/REFS/SFRI
+		/home/duncombe/PROGS/barebones.tex
+		/home/duncombe/PROGS/readref
+		/home/duncombe/PROGS/reference
+		/home/duncombe/PROGS/cleanbbl.awk
+ENDIN
+			); do 
+##########################################
+		cp -aiv $f $CDDIR
+	done
+)
+
+# # have to rewrite a bunch before we can use this
+# # make the name links
+# (	cd $CDDIR/papers/pdf
+# 	for f in *.pdf *.ps; do
+# 		../../makelink $f
+# 	done
+# )
+
+cp -aiv ~/Reprints/incoming/{newcd,procfil.s,checkrefs,cleandups,\
+makerefsindex,getfromuct,getfromvema,backout} CD
+
+(
+	cd CD
+	ls -alR > ls-alR.txt
+	find . -type f -print0 | xargs -0 md5sum |
+		grep -v "\./MD5SUM" > MD5SUM
+)
+
+echo Now burn the directory to CD
+echo       mkisofs -v -R -r CD | cdrecord -v -
+echo Checksum the CD 
+echo       mount /media/CDROM; cd /media/CDROM; md5sum -c MD5SUM 
+echo Feng shui the Library files: cat INDEX.idx onto the full
+echo       Library INDEX.idx; cat MD5SUM onto the full Library 
+echo       MD5SUM; run makecatalogue to regenerate Catalogue
+echo Copy the directory to storage
+echo Checksum the storage copy
+echo Upload to the vema library
+echo Checksum the vema copy
+
+fi
+

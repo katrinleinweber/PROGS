@@ -1,0 +1,18 @@
+echo ""
+for f in * ; do
+	if [ -e "inrefs/$f" ]; then
+		diff -q "$f" "inrefs/$f" && mv -fv "$f"  trash 
+	fi
+	if [ -e "$f" -a -e "trash/$f" ]; then
+		diff -qs "$f" "trash/$f" && rm -v "$f" 
+	fi
+	
+done
+(	cd fromuct;
+	for f in * ; do
+		if [ -e "../inrefs/$f" ]; then
+			diff -q "$f" "../inrefs/$f" && mv -fv "$f" ../trash
+		fi
+	done
+)
+

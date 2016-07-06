@@ -1,0 +1,2 @@
+
+rsync -auzv --remove-sent-files vema:incoming/ /home/duncombe/Reprints/incoming/fromvema/

@@ -1,0 +1,47 @@
+#
+# this filename conflicts with a utility that processes troff and
+# latex files. Therefore I am moving it to makerefsindex.
+#
+# make the output 'silent', do not echo the filename
+
+if [ $# -eq 0 ] ; then
+	 echo no filename 
+	 exit 1 
+else
+
+while [ $# -gt 0 ]; do
+	case $1 in 
+		-a*)	PROCESS=cat 
+			shift ;;
+		*)	PROCESS=ps2ascii ;;
+	esac
+	FILE=${1:?}
+	# echo $FILE >&2
+
+# Try this: 
+# 	convert the PDF to ASCII
+# 	collect all the words, lose punctuation and control characters
+# 	drop words that are too short or too long or contain digits
+# 	sort, uniq, and print all the words behind the filename
+
+$PROCESS "$FILE" |
+	awk '{
+		gsub(/[[:punct:][:cntrl:]]/," ")
+		for (f=1;f<=NF;f++){
+			if (	length($f)>3 && \
+				length($f)<=15 && \
+				$f!~/[[:digit:]]/ ){
+					print tolower($f)
+				}
+			}
+		}' | sort | uniq |
+	(	
+		# echo -ne "$(basename ${FILE})\t"
+		awk '{printf $0 " "}END{printf "\n"}') |
+	awk 'NF>1{print}'
+
+shift
+
+done
+
+fi

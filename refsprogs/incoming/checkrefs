@@ -1,0 +1,8 @@
+
+(	cd ${1:?}
+	for f in *; do
+		grep -q "$f" MD5SUM  || echo No checksum for $f
+	done
+	md5sum -c MD5SUM | grep FAILED
+	)
+

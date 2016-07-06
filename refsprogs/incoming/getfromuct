@@ -1,0 +1,3 @@
+rsync -auzv itchy:incoming/ /home/duncombe/Reprints/incoming/fromuct/
+ssh itchy ./cleanup
+

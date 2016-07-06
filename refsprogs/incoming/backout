@@ -1,0 +1,54 @@
+
+# usage: backout filename
+# moves a file from CD/papers/pdf to inrefs
+# moves the MD5SUM entry 
+# moves the INDEX entry
+# edits the cmdrref.bib entry
+#
+OLDARC=E12
+NEWARC=E13
+
+F=${1?what you want to move?}
+
+PDFDIR="CD/papers/pdf"
+echo $F is moving from $PDFDIR to inrefs
+
+[ -e cmdrrefs.bib ] || 
+	{ echo make a local copy of cmdrrefs.bib ; exit 10; }
+
+[ `egrep $F cmdrrefs.bib | wc -l ` -lt 1 ] &&
+	{ echo $F not found in cmdrrefs.bib ; exit 20; }
+
+[ `egrep $F cmdrrefs.bib | wc -l ` -gt 1 ] &&
+	{ echo Too many $F found in cmdrrefs.bib ; exit 21; }
+
+
+mv -iv $PDFDIR/$F inrefs/  ||
+	{ echo  failed to move $F ; exit 30; }
+
+grep -E "\\<"$F"\\>" $PDFDIR/MD5SUM >> inrefs/MD5SUM
+mv $PDFDIR/MD5SUM temprymdsum
+grep -vE "\\<"$F"\\>" temprymdsum > $PDFDIR/MD5SUM 
+echo transferred MD5SUM
+
+
+grep -E "\\<"$F"\\>" $PDFDIR/INDEX.idx >> inrefs/INDEX.idx
+mv  $PDFDIR/INDEX.idx tempryindex
+grep -v -E "\\<"$F"\\>" tempryindex > $PDFDIR/INDEX.idx
+echo transferred INDEX.idx
+
+
+awk --source '
+	BEGIN{ RS="";FS="\n";ORS="\n\n";OFS="\n"} 
+	/\<'${F}'\>/{sub("CDARCHIVE = \"'${OLDARC}'\"","CDARCHIVE = \"'${NEWARC}'\"")}
+	{print}
+' cmdrrefs.bib > tempryfile && mv tempryfile cmdrrefs.bib
+echo transferred cmdrrefs.bib
+
+[ `ls -1 inrefs | grep -Ev "CVS|MD5SUM|INDEX" | wc -l` -ne `grep ${NEWARC} cmdrrefs.bib | wc -l` ] &&
+	echo "Wrong number of files transferred\!"
+
+
+du -s  CD
+
+
