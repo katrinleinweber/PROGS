@@ -66,7 +66,7 @@ for FILE in $@ ; do
 
 	echo "Move ${FILE} to $DEST"
 	# echo "Move  $LINK to $DEST/pdf"
-	read -p "(Y/N/F/T/Q)? " A
+	read -p "(Y/N/[F]orfiling/[T]rash/[Q]uit)? " A
 
 	if [ "$A" = "y" -o "$A" = "Y" ]; then 
 		if [ -d $DEST ]; then 

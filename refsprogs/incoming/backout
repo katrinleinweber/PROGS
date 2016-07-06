@@ -5,8 +5,8 @@
 # moves the INDEX entry
 # edits the cmdrref.bib entry
 #
-OLDARC=E12
-NEWARC=E13
+OLDARC=E13
+NEWARC=E15
 
 F=${1?what you want to move?}
 
@@ -45,7 +45,7 @@ awk --source '
 ' cmdrrefs.bib > tempryfile && mv tempryfile cmdrrefs.bib
 echo transferred cmdrrefs.bib
 
-[ `ls -1 inrefs | grep -Ev "CVS|MD5SUM|INDEX" | wc -l` -ne `grep ${NEWARC} cmdrrefs.bib | wc -l` ] &&
+[ `ls -1 inrefs | grep -Ev "CVS|MD5SUM|INDEX" | wc -l` -ne `grep "CDARCHIVE = .*"${NEWARC} cmdrrefs.bib | wc -l` ] &&
 	echo "Wrong number of files transferred\!"
 
 
