@@ -5,7 +5,7 @@ if hash gmt 2> /dev/null ; then
 elif hash GMT 2> /dev/null ; then
 	GMTWRAP=""
 else
-	echo An executable version of GMT is apparently not found in your path.
+	echo "An executable version of GMT is apparently not found in your path." >&2 
 	exit 1
 fi
 
