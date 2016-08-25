@@ -1,4 +1,6 @@
 #! /bin/bash
+# Is GMT installed on the system? Is it running correctly? 
+# Draw a quick picture of Africa and test whether GMT is installed.
 
 OUTPUTFILE=$(mktemp)
 

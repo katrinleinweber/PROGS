@@ -1,7 +1,13 @@
 #! /bin/bash
+# Wrapper for GMT
+# Runs either Version 4 or Version 5 which ever is av ailable. 
+# Version 4 has stand-alone commands; Version 5 runs commands as 
+# modules via a gmt command. 
 
+# Version 5
 if hash gmt 2> /dev/null ; then
 	GMTWRAP=gmt
+# Version 4
 elif hash GMT 2> /dev/null ; then
 	GMTWRAP=""
 else
