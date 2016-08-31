@@ -344,6 +344,7 @@ FNR==1{print FILENAME > "/dev/stderr" }
 	for (i=1;i<=N-1;i++){ printf fmt[i],DataVal[OutPutVars[i]],OFS } ; 
 	printf fmt[i],DataVal[OutPutVars[N]],ORS;
 	for (i in OutPutVars){DataVal[OutPutVars[i]]=""};
+	printf "\n"
 	fflush();
 	}
 
