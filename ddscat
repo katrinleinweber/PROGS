@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if [ $(basename $0) = "ndscat" ]; then 
+	DDSPROG=~/PROGS/ndsparse.awk 
+elif [ $(basename $0) = "ddscat" ]; then
+	DDSPROG=~/PROGS/ddsparse.awk 
+elif [ $(basename $0) = "sdscat" ]; then
+	DDSPROG=~/PROGS/sdsparse.awk 
+else 
+	echo "Unrecognized command string $0"
+	exit 1
+fi
+
+gawk -f $DDSPROG -f mathlib.awk \
+	Date,Time,UnixTime,Latitude,Longitude,Salinity,SeaTemp $@ 
+	# gawk -f dds_validate.awk -f mathlib.awk
+
+# gawk -f $DDSPROG -f mathlib.awk Station,Gridno,Latitude,Longitude,Date,Time $@ | \
+# 	gawk '	BEGIN{done=0;
+# 		print "==============================================================================\n"\
+# 		      "Scanning hourlogs for Station Information:\n"}
+# 		NF>4{ if (!done){printf "Start: "; print ; done=1}}
+# 		NF<=4{ if ( done ) { printf "  End: "; print prevrec; print "-"; done=0}}
+# 		{prevrec=$0}
+# 		'
+

@@ -4,6 +4,8 @@ if [ $(basename $0) = "nds_validate" ]; then
 	DDSPROG=~/PROGS/ndsparse.awk 
 elif [ $(basename $0) = "dds_validate" ]; then
 	DDSPROG=~/PROGS/ddsparse.awk 
+elif [ $(basename $0) = "sds_validate" ]; then
+	DDSPROG=~/PROGS/sdsparse.awk 
 else 
 	echo "Unrecognized command string $0"
 	exit 1
