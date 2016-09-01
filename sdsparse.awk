@@ -294,11 +294,11 @@ FNR==1{print FILENAME > "/dev/stderr" }
 # 		posout=posddm(posout) H
 # 		}
 	inLat=IV["LATITUDE"] 
-	DataVal["Latitude"]=int(inLat/100) ":" inLat%100 " " IV["N_S"]
+	DataVal["Latitude"]=int(inLat/100) ":" inLat%100 IV["N_S"]
 	# # printf "%.5f\n",parsepos(DataVal["Latitude"])
 	# print parsepos(DataVal["Latitude"])
 	inLon=IV["LONGITUDE"] 
-	DataVal["Longitude"]=int(inLon/100) ":" inLon%100 " " IV["E_W"]
+	DataVal["Longitude"]=int(inLon/100) ":" inLon%100 IV["E_W"]
 	# # printf "%.5f\n",parsepos(DataVal["Longitude"])
 	# print parsepos(DataVal["Longitude"])
 # /^[[:digit:]][[:digit:]] GRID/{ DataVal["Gridno"]=$3 }

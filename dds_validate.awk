@@ -34,8 +34,8 @@ BEGIN{
 {	Now["Date"]=$1;
 	Now["Time"]=$2; sub(/:00$/,"",Now["Time"]);
 	Now["Unix"]=$3;
-	Now["Lati"]=$4;
-	Now["Long"]=$5;
+	Now["Lati"]=parsepos($4);
+	Now["Long"]=parsepos($5);
 	Now["Salt"]=$6; NBinSalt[int(Now["Salt"]/Binsize)]++;
 	Now["Temp"]=$7; NBinTemp[int(Now["Temp"]/Binsize)]++;
 	for ( i in Now ){ Diff[i]=Now[i]-Prev[i];}
@@ -95,11 +95,14 @@ END{
 	
 	printf "\n"
 
-	for ( i in NBinTemp ){ printf "%12s: (%5.2f <= T < %5.2f) = %7d records\n",Title["Temp"],i*Binsize,i*Binsize+Binsize,NBinTemp[i]  | "sort" }
-	close( "sort" )
+	for ( i in NBinTemp ){ printf "%12s: (%05.2f <= T < %05.2f) = %7d records\n",Title["Temp"],i*Binsize,i*Binsize+Binsize,NBinTemp[i] | "sort -n" }
+	close( "sort -n" )
 	printf "\n"
 
-	for ( i in NBinSalt ){ printf "%12s: (%5.2f <= S < %5.2f) = %7d records\n",Title["Salt"],i*Binsize,i*Binsize+Binsize,NBinSalt[i]  | "sort" }
-	close( "sort" )
+	for ( i in NBinSalt ){ printf "%12s: (%05.2f <= S < %05.2f) = %7d records\n",Title["Salt"],i*Binsize,i*Binsize+Binsize,NBinSalt[i] | "sort -n" }
+	close( "sort -n" )
 	
 	}
+
+# vi: se tw=0 :
+
