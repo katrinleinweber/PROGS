@@ -1,0 +1,6 @@
+#! /bin/bash
+# reformats xml file in place
+
+TMPFL=$(mktemp)
+xmllint --output $TMPFL --format ${1:?}
+mv $TMPFL $1
