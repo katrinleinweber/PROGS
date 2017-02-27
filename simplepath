@@ -1,0 +1,7 @@
+echo $PATH | awk '
+	BEGIN{FS=":"; OFS=":"}
+	{for(i=1;i<NF;i++){
+		if(!newPATH[$i]++){printf "%s:",$i}
+		}
+	 printf "%s\n",$i
+	} '
