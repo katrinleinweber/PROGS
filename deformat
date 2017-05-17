@@ -1,0 +1,6 @@
+
+
+TMPFL=$(mktemp)
+awk 'NR==1{print;next}{sub("^ *",""); printf("%s",$0)}' ${1:?} > $TMPFL
+mv $TMPFL $1
+
