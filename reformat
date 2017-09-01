@@ -1,6 +1,35 @@
 #! /bin/bash
 # reformats xml file in place
 
-TMPFL=$(mktemp)
-xmllint --output $TMPFL --format ${1:?}
-mv $TMPFL $1
+usage() { echo "Usage: $0 [-h] [-i] [-n] <filename>" 1>&2; exit 1; }
+
+INPLACE=true
+
+while getopts ":q:h:i:n:" o; do
+    case "${o}" in
+        i)
+            INPLACE=true
+            ;;
+        n)
+            INPLACE=false
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+
+echo $OPTIND
+shift $((OPTIND-1))
+
+
+if $INPLACE ; then
+	TMPFL=$(mktemp)
+else 
+	TMPFL=-
+fi
+
+echo xmllint --output $TMPFL --format ${1:?}
+
+$INPLACE && echo mv $TMPFL $1 
+
