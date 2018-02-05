@@ -1,7 +1,7 @@
 
 DOI=${1?provide doi}
 
-# lynx -accept_all_cookies http://dx.doi.org/$DOI
-firefox -new-window http://dx.doi.org/$DOI &
+# lynx -accept_all_cookies https://doi.org/$DOI
+firefox -new-window https://doi.org/$DOI &
 
 
